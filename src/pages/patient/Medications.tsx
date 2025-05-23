@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Clock, Check, XCircle, Edit, Trash2 } from "lucide-react";
@@ -16,7 +17,8 @@ const initialMedications = [
     frequency: "12/12h",
     times: ["08:00", "20:00"],
     nextTime: new Date(new Date().getTime() + 30 * 60000), // 30 minutes from now
-    isTaken: false 
+    isTaken: false,
+    skipped: false 
   },
   { 
     id: 2, 
@@ -25,7 +27,8 @@ const initialMedications = [
     frequency: "1x ao dia",
     times: ["09:00"],
     nextTime: new Date(new Date().getTime() + 120 * 60000), // 2 hours from now
-    isTaken: false
+    isTaken: false,
+    skipped: false
   },
   { 
     id: 3, 
@@ -34,7 +37,8 @@ const initialMedications = [
     frequency: "1x ao dia",
     times: ["22:00"],
     nextTime: new Date(new Date().setHours(22, 0, 0, 0)), // Today at 10 PM
-    isTaken: false
+    isTaken: false,
+    skipped: false
   },
   { 
     id: 4, 
@@ -43,7 +47,8 @@ const initialMedications = [
     frequency: "2x ao dia",
     times: ["08:00", "20:00"],
     nextTime: new Date(new Date().setHours(8, 0, 0, 0)),
-    isTaken: true
+    isTaken: true,
+    skipped: false
   },
   { 
     id: 5, 
@@ -52,7 +57,8 @@ const initialMedications = [
     frequency: "1x por semana",
     times: ["08:00"],
     nextTime: new Date(new Date().setDate(new Date().getDate() + 4)),
-    isTaken: false
+    isTaken: false,
+    skipped: false
   },
 ];
 

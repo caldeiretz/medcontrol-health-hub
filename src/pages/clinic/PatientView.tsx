@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Calendar, Phone, Mail, AlertCircle, PencilLine, BellRing } from "lucide-react";
+import { ArrowLeft, User, Calendar, Phone, Mail, AlertCircle, PencilLine, BellRing, Check, X, Users } from "lucide-react";
 import ClinicLayout from "@/components/layouts/ClinicLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 // Import Recharts components for charts
@@ -19,7 +18,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceLine
 } from "recharts";
 
 // Mock patient data
@@ -495,11 +495,5 @@ const PatientView = () => {
     </ClinicLayout>
   );
 };
-
-// Import additional Recharts components
-import { ReferenceLine } from "recharts";
-
-// Import the X icon from lucide-react
-import { X, Users } from "lucide-react";
 
 export default PatientView;
