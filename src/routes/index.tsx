@@ -1,0 +1,140 @@
+
+import { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Landing page
+const Index = lazy(() => import('@/pages/Index'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+
+// Auth pages
+const ProfileChoice = lazy(() => import('@/pages/auth/ProfileChoice'));
+const PatientLogin = lazy(() => import('@/pages/auth/PatientLogin'));
+const PatientRegister = lazy(() => import('@/pages/auth/PatientRegister'));
+const ClinicLogin = lazy(() => import('@/pages/auth/ClinicLogin'));
+const ClinicRegister = lazy(() => import('@/pages/auth/ClinicRegister'));
+
+// Patient pages
+const PatientDashboard = lazy(() => import('@/pages/patient/Dashboard'));
+const PatientMedications = lazy(() => import('@/pages/patient/Medications'));
+const PatientAddMedication = lazy(() => import('@/pages/patient/AddMedication'));
+const PatientVitals = lazy(() => import('@/pages/patient/Vitals'));
+const PatientHistory = lazy(() => import('@/pages/patient/History'));
+const PatientSharing = lazy(() => import('@/pages/patient/Sharing'));
+
+// Clinic pages
+const ClinicDashboard = lazy(() => import('@/pages/clinic/Dashboard'));
+const ClinicPatientView = lazy(() => import('@/pages/clinic/PatientView'));
+
+// Loading fallback
+const LoadingFallback = () => (
+  <div className="flex h-screen w-full items-center justify-center">
+    <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+  </div>
+);
+
+// Auth guard for protected routes
+const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'patient' | 'clinic' }) => {
+  // For now, we'll just simulate authentication
+  // This will be replaced with actual auth later
+  const isAuthenticated = localStorage.getItem('authenticated') === 'true';
+  const userRole = localStorage.getItem('userRole');
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/auth/profile-choice" />;
+  }
+  
+  if (userRole !== userType) {
+    return <Navigate to={userRole === 'patient' ? '/patient/dashboard' : '/clinic/dashboard'} />;
+  }
+  
+  return children;
+};
+
+const AppRoutes = () => {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/auth/profile-choice" element={<ProfileChoice />} />
+        <Route path="/auth/patient-login" element={<PatientLogin />} />
+        <Route path="/auth/patient-register" element={<PatientRegister />} />
+        <Route path="/auth/clinic-login" element={<ClinicLogin />} />
+        <Route path="/auth/clinic-register" element={<ClinicRegister />} />
+
+        {/* Patient protected routes */}
+        <Route 
+          path="/patient/dashboard" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientDashboard />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/patient/medications" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientMedications />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/patient/add-medication" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientAddMedication />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/patient/vitals" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientVitals />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/patient/history" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientHistory />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/patient/sharing" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientSharing />
+            </AuthGuard>
+          } 
+        />
+
+        {/* Clinic protected routes */}
+        <Route 
+          path="/clinic/dashboard" 
+          element={
+            <AuthGuard userType="clinic">
+              <ClinicDashboard />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/clinic/patient/:patientId" 
+          element={
+            <AuthGuard userType="clinic">
+              <ClinicPatientView />
+            </AuthGuard>
+          } 
+        />
+
+        {/* Catch-all route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  );
+};
+
+export default AppRoutes;
