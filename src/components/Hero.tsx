@@ -1,13 +1,20 @@
 
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const handleGetStarted = () => {
+    navigate('/auth/profile-choice');
   };
 
   return (
@@ -37,6 +44,7 @@ const Hero = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-blue-600 to-green-500 text-white font-semibold text-lg px-8 py-4 hover:from-blue-700 hover:to-green-600 transition-all duration-300 shadow-lg"
+                onClick={handleGetStarted}
               >
                 Comece Agora
                 <ArrowRight className="ml-2" size={20} />

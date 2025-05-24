@@ -1,8 +1,19 @@
 
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Users, Building } from 'lucide-react';
 
 const CTA = () => {
+  const navigate = useNavigate();
+
+  const handlePatientSignUp = () => {
+    navigate('/auth/patient-register');
+  };
+
+  const handleClinicSignUp = () => {
+    navigate('/auth/clinic-register');
+  };
+
   return (
     <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-green-600">
       <div className="container mx-auto px-4">
@@ -22,6 +33,7 @@ const CTA = () => {
             <Button 
               size="lg" 
               className="bg-white text-blue-700 font-semibold text-lg px-8 py-4 hover:bg-blue-50 transition-all duration-300 shadow-lg group"
+              onClick={handlePatientSignUp}
             >
               <Users className="mr-3 group-hover:scale-110 transition-transform" size={20} />
               Criar Conta (Paciente)
@@ -32,6 +44,7 @@ const CTA = () => {
               size="lg" 
               variant="outline"
               className="border-2 border-white text-white font-semibold text-lg px-8 py-4 hover:bg-white hover:text-blue-700 transition-all duration-300 group"
+              onClick={handleClinicSignUp}
             >
               <Building className="mr-3 group-hover:scale-110 transition-transform" size={20} />
               Criar Conta (Clínica)

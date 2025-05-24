@@ -1,10 +1,12 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -14,6 +16,14 @@ const Header = () => {
       element.scrollIntoView({ behavior: 'smooth' });
     }
     setIsMenuOpen(false);
+  };
+
+  const handleLogin = () => {
+    navigate('/auth/profile-choice');
+  };
+
+  const handleSignUp = () => {
+    navigate('/auth/profile-choice');
   };
 
   return (
@@ -64,10 +74,17 @@ const Header = () => {
 
           {/* Desktop Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" className="font-medium">
+            <Button 
+              variant="outline" 
+              className="font-medium"
+              onClick={handleLogin}
+            >
               Entrar
             </Button>
-            <Button className="bg-gradient-to-r from-blue-600 to-green-500 text-white font-medium hover:from-blue-700 hover:to-green-600">
+            <Button 
+              className="bg-gradient-to-r from-blue-600 to-green-500 text-white font-medium hover:from-blue-700 hover:to-green-600"
+              onClick={handleSignUp}
+            >
               Criar Conta
             </Button>
           </div>
@@ -116,10 +133,17 @@ const Header = () => {
                 Contato
               </button>
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="outline" className="font-medium">
+                <Button 
+                  variant="outline" 
+                  className="font-medium"
+                  onClick={handleLogin}
+                >
                   Entrar
                 </Button>
-                <Button className="bg-gradient-to-r from-blue-600 to-green-500 text-white font-medium">
+                <Button 
+                  className="bg-gradient-to-r from-blue-600 to-green-500 text-white font-medium"
+                  onClick={handleSignUp}
+                >
                   Criar Conta
                 </Button>
               </div>
