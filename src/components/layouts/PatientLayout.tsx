@@ -31,6 +31,10 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
     navigate('/');
   };
 
+  const handleProfileClick = () => {
+    navigate('/patient/profile');
+  };
+
   const navigationItems = [
     {
       name: "Início",
@@ -89,7 +93,10 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
         </nav>
         
         <div className="border-t p-4">
-          <div className="flex items-center justify-between mb-4">
+          <div 
+            className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+            onClick={handleProfileClick}
+          >
             <div className="flex items-center">
               <div className="rounded-full bg-gray-200 p-1">
                 <User className="h-6 w-6 text-gray-600" />
@@ -162,7 +169,13 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
             </nav>
             
             <div className="border-t p-4">
-              <div className="flex items-center justify-between mb-4">
+              <div 
+                className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                onClick={() => {
+                  handleProfileClick();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
                 <div className="flex items-center">
                   <div className="rounded-full bg-gray-200 p-1">
                     <User className="h-6 w-6 text-gray-600" />

@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
-import { Clock, Bell, Check, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Clock, Bell, Check, XCircle, Activity, HeartPulse } from "lucide-react";
 import PatientLayout from "@/components/layouts/PatientLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,7 @@ const mockMedications = [
 const Dashboard = () => {
   const [medications, setMedications] = useState(mockMedications);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const navigate = useNavigate();
   
   // Format date to display
   const formattedDate = currentDate.toLocaleDateString('pt-BR', {
@@ -88,6 +89,19 @@ const Dashboard = () => {
     ));
     
     toast.info("Medicação ignorada");
+  };
+  
+  // Navigation handlers
+  const handleViewAllMedications = () => {
+    navigate('/patient/medications');
+  };
+
+  const handleRegisterVitals = () => {
+    navigate('/patient/vitals');
+  };
+
+  const handleViewHistory = () => {
+    navigate('/patient/history');
   };
   
   // Update current time
@@ -162,7 +176,7 @@ const Dashboard = () => {
                   <Button 
                     variant="link" 
                     className="w-full text-blue-600"
-                    onClick={() => { /* Navigate to medications page */ }}
+                    onClick={handleViewAllMedications}
                   >
                     Ver todas as medicações
                   </Button>
@@ -192,7 +206,7 @@ const Dashboard = () => {
                 <Button 
                   variant="outline" 
                   className="w-full mt-2"
-                  onClick={() => { /* Navigate to vitals page */ }}
+                  onClick={handleRegisterVitals}
                 >
                   Registrar novo
                 </Button>
@@ -222,7 +236,7 @@ const Dashboard = () => {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => { /* Navigate to history page */ }}
+                onClick={handleViewHistory}
               >
                 Ver histórico completo
               </Button>

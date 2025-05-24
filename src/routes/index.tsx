@@ -17,9 +17,11 @@ const ClinicRegister = lazy(() => import('@/pages/auth/ClinicRegister'));
 const PatientDashboard = lazy(() => import('@/pages/patient/Dashboard'));
 const PatientMedications = lazy(() => import('@/pages/patient/Medications'));
 const PatientAddMedication = lazy(() => import('@/pages/patient/AddMedication'));
+const PatientEditMedication = lazy(() => import('@/pages/patient/EditMedication'));
 const PatientVitals = lazy(() => import('@/pages/patient/Vitals'));
 const PatientHistory = lazy(() => import('@/pages/patient/History'));
 const PatientSharing = lazy(() => import('@/pages/patient/Sharing'));
+const PatientProfile = lazy(() => import('@/pages/patient/Profile'));
 
 // Clinic pages
 const ClinicDashboard = lazy(() => import('@/pages/clinic/Dashboard'));
@@ -88,6 +90,14 @@ const AppRoutes = () => {
           } 
         />
         <Route 
+          path="/patient/edit-medication/:medicationId" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientEditMedication />
+            </AuthGuard>
+          } 
+        />
+        <Route 
           path="/patient/vitals" 
           element={
             <AuthGuard userType="patient">
@@ -108,6 +118,14 @@ const AppRoutes = () => {
           element={
             <AuthGuard userType="patient">
               <PatientSharing />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/patient/profile" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientProfile />
             </AuthGuard>
           } 
         />

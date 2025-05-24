@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Clock, Check, XCircle, Edit, Trash2 } from "lucide-react";
@@ -127,7 +126,6 @@ const Medications = () => {
   
   // Handle edit medication
   const handleEditMedication = (id: number) => {
-    // In a real app, navigate to edit page with ID
     navigate(`/patient/edit-medication/${id}`);
   };
   
