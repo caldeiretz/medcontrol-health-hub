@@ -248,7 +248,4 @@ const Dashboard = () => {
   );
 };
 
-// Import the Activity icon from lucide-react
-import { Activity, HeartPulse } from "lucide-react";
-
 export default Dashboard;
