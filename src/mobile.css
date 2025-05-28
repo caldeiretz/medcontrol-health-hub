@@ -1,0 +1,32 @@
+
+/* Mobile-specific styles for Capacitor */
+.platform-ios {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.platform-android {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Improve touch targets for mobile */
+button, .touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Better scrolling on mobile */
+.scroll-smooth {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent zoom on inputs */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Hide web-specific elements on native */
+.platform-ios .web-only,
+.platform-android .web-only {
+  display: none !important;
+}

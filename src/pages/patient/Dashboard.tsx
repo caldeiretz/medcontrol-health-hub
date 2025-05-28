@@ -5,6 +5,7 @@ import PatientLayout from "@/components/layouts/PatientLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useNotifications } from "@/hooks/useNotifications";
 
 // Mock medication data
 const mockMedications = [
@@ -38,6 +39,7 @@ const Dashboard = () => {
   const [medications, setMedications] = useState(mockMedications);
   const [currentDate, setCurrentDate] = useState(new Date());
   const navigate = useNavigate();
+  const { scheduleNotification, cancelNotification } = useNotifications();
   
   // Format date to display
   const formattedDate = currentDate.toLocaleDateString('pt-BR', {
@@ -75,21 +77,54 @@ const Dashboard = () => {
   
   // Handle medication taken
   const handleMedicationTaken = (id: number) => {
+    const medication = medications.find(med => med.id === id);
+    
     setMedications(prev => prev.map(med => 
       med.id === id ? { ...med, isTaken: true } : med
     ));
+    
+    // Cancel any pending notification for this medication
+    if (medication) {
+      cancelNotification(id);
+    }
     
     toast.success("Medicação registrada com sucesso!");
   };
   
   // Handle skip medication
   const handleSkipMedication = (id: number) => {
+    const medication = medications.find(med => med.id === id);
+    
     setMedications(prev => prev.map(med => 
       med.id === id ? { ...med, isTaken: true, skipped: true } : med
     ));
     
+    // Cancel any pending notification for this medication
+    if (medication) {
+      cancelNotification(id);
+    }
+    
     toast.info("Medicação ignorada");
   };
+  
+  // Schedule notifications for upcoming medications
+  useEffect(() => {
+    const scheduleNotifications = () => {
+      upcomingMedications.forEach(med => {
+        const notificationTime = new Date(med.nextTime.getTime() - 10 * 60000); // 10 minutes before
+        if (notificationTime > new Date()) {
+          scheduleNotification(
+            "Hora da medicação!",
+            `É hora de tomar ${med.name} (${med.dosage})`,
+            notificationTime,
+            med.id
+          );
+        }
+      });
+    };
+
+    scheduleNotifications();
+  }, [medications, scheduleNotification]);
   
   // Navigation handlers
   const handleViewAllMedications = () => {
