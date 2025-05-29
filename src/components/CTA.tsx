@@ -17,9 +17,9 @@ const CTA = () => {
               Comece hoje mesmo a cuidar melhor da saúde com o 
               <span className="text-blue-200"> MedControl</span>
             </h2>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-              Junte-se a milhares de pessoas que já transformaram seu cuidado com a saúde
-            </p>
+            <p className="text-xl text-blue-100 max-w-2xl mx-auto">Junte-se a diversas pessoas que já transformaram
+seu cuidado com a saúde
+          </p>
           </div>
 
           {/* CTA Buttons */}
@@ -44,8 +44,8 @@ const CTA = () => {
               <span className="text-sm">Começe grátis em 2 minutos</span>
             </div>
             <div className="flex items-center space-x-2 text-blue-100">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm">Sem cartão de crédito</span>
+              
+              
             </div>
             <div className="flex items-center space-x-2 text-blue-100">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>

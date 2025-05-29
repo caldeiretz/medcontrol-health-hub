@@ -24,11 +24,11 @@ const ParaClinicas = () => {
           {/* Content */}
           <div className="space-y-8 my-0">
             <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-left">
                 Transforme o acompanhamento de 
                 <span className="text-blue-600"> seus pacientes</span>
               </h2>
-              <p className="text-xl text-gray-600 leading-relaxed text-center">
+              <p className="text-xl text-gray-600 leading-relaxed text-left">
                 Melhore a adesão medicamentosa, reduza complicações e tenha uma visão clara 
                 da rotina de seus pacientes crônicos.
               </p>
@@ -47,7 +47,7 @@ const ParaClinicas = () => {
                 </div>)}
             </div>
 
-            <Button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center px-[16px] mx-[40px] my-[51px] py-0">
+            <Button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center px-[16px] my-[51px] py-0 mx-0">
               Criar Conta para Clínica
             </Button>
           </div>

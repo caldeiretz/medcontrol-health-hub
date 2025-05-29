@@ -94,11 +94,11 @@ const ParaPacientes = () => {
           {/* Content */}
           <div className="order-1 lg:order-2 space-y-8">
             <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-left">
                 Você no controle da 
                 <span className="text-green-600"> sua saúde</span>
               </h2>
-              <p className="text-xl text-gray-600 leading-relaxed text-center">
+              <p className="text-xl text-gray-600 leading-relaxed text-left">
                 Com lembretes, gráficos e um toque por dia, o MedControl ajuda você a seguir 
                 seu tratamento e compartilhar informações com quem cuida de você.
               </p>
@@ -122,7 +122,7 @@ const ParaPacientes = () => {
                 </div>)}
             </div>
 
-            <Button className="bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold text-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 text-center px-[23px] py-[17px] my-[20px] mx-[27px]">
+            <Button className="bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold text-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 text-center px-[23px] py-[17px] my-[20px] mx-0">
               Começar Agora - É Grátis!
             </Button>
           </div>
