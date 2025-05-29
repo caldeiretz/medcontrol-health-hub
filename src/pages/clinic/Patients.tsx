@@ -131,7 +131,7 @@ const Patients = () => {
                     <SelectItem value="all">Toda Adesão</SelectItem>
                     <SelectItem value="high">Alta (≥90%)</SelectItem>
                     <SelectItem value="medium">Média (70-89%)</SelectItem>
-                    <SelectItem value="low">Baixa (<70%)</SelectItem>
+                    <SelectItem value="low">Baixa (&lt;70%)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
