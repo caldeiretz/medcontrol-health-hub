@@ -1,6 +1,7 @@
 
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Landing page
 const Index = lazy(() => import('@/pages/Index'));
@@ -38,19 +39,26 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Auth guard for protected routes
+// Enhanced Auth guard with better security
 const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'patient' | 'clinic' }) => {
-  // For now, we'll just simulate authentication
-  // This will be replaced with actual auth later
-  const isAuthenticated = localStorage.getItem('authenticated') === 'true';
-  const userRole = localStorage.getItem('userRole');
+  const { isAuthenticated, user } = useAuth();
   
-  if (!isAuthenticated) {
-    return <Navigate to="/auth/profile-choice" />;
+  // Check authentication state from context instead of localStorage
+  if (!isAuthenticated || !user) {
+    console.log('Access denied: User not authenticated');
+    return <Navigate to="/auth/profile-choice" replace />;
   }
   
-  if (userRole !== userType) {
-    return <Navigate to={userRole === 'patient' ? '/patient/dashboard' : '/clinic/dashboard'} />;
+  // Validate user role matches required type
+  if (user.role !== userType) {
+    console.log(`Access denied: User role ${user.role} does not match required ${userType}`);
+    return <Navigate to={user.role === 'patient' ? '/patient/dashboard' : '/clinic/dashboard'} replace />;
+  }
+  
+  // Additional security check for valid user data
+  if (!user.id || !user.email) {
+    console.log('Access denied: Invalid user data');
+    return <Navigate to="/auth/profile-choice" replace />;
   }
   
   return children;

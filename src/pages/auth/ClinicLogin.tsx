@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { validatePassword, isRateLimited, clearRateLimit } from '@/utils/security';
 
 const formSchema = z.object({
   email: z
@@ -45,9 +46,26 @@ const ClinicLogin = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
+      
+      // Rate limiting check
+      const identifier = `login_${values.email}`;
+      if (isRateLimited(identifier, 5, 300000)) { // 5 attempts per 5 minutes
+        toast.error('Muitas tentativas de login. Tente novamente em alguns minutos.');
+        return;
+      }
+
+      // Enhanced password validation
+      const passwordValidation = validatePassword(values.password);
+      if (!passwordValidation.isValid) {
+        toast.error('Senha não atende aos requisitos de segurança');
+        return;
+      }
+
       const success = await login(values.email, values.password, 'clinic');
       
       if (success) {
+        // Clear rate limiting on successful login
+        clearRateLimit(identifier);
         toast.success('Login realizado com sucesso');
         navigate('/clinic/dashboard');
       } else {
@@ -55,7 +73,7 @@ const ClinicLogin = () => {
       }
     } catch (error) {
       toast.error('Ocorreu um erro ao fazer login.');
-      console.error(error);
+      console.error('Login error:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +105,7 @@ const ClinicLogin = () => {
                         type="email" 
                         {...field} 
                         className="text-base"
+                        autoComplete="email"
                       />
                     </FormControl>
                     <FormMessage />
@@ -104,7 +123,8 @@ const ClinicLogin = () => {
                         placeholder="Sua senha" 
                         type="password" 
                         {...field}
-                        className="text-base" 
+                        className="text-base"
+                        autoComplete="current-password"
                       />
                     </FormControl>
                     <FormMessage />

@@ -28,82 +28,177 @@ export const useAuth = () => {
   return context;
 };
 
+// Utility function to sanitize input
+const sanitizeInput = (input: string): string => {
+  return input.trim().replace(/[<>\"'&]/g, '');
+};
+
+// Validate email format
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Validate password strength
+const isValidPassword = (password: string): boolean => {
+  return password.length >= 8 && 
+         /[A-Z]/.test(password) && 
+         /[a-z]/.test(password) && 
+         /[0-9]/.test(password);
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if user is authenticated on component mount
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
+    const storedUser = sessionStorage.getItem('user');
+    const authToken = sessionStorage.getItem('authToken');
+    
+    if (storedUser && authToken) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Validate stored user data
+        if (parsedUser.id && parsedUser.email && parsedUser.role) {
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        } else {
+          // Clear invalid data
+          sessionStorage.removeItem('user');
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('userRole');
+        }
+      } catch (error) {
+        console.error('Error parsing stored user data');
+        sessionStorage.clear();
+      }
     }
   }, []);
 
-  // Mock login for development
+  // Enhanced login with proper validation
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
     try {
-      // This would be replaced with an actual API call
-      console.log('Login attempt:', { email, password, role });
+      // Input validation and sanitization
+      const sanitizedEmail = sanitizeInput(email);
       
-      // Mock successful login
+      if (!isValidEmail(sanitizedEmail)) {
+        console.error('Invalid email format');
+        return false;
+      }
+
+      if (!isValidPassword(password)) {
+        console.error('Password does not meet security requirements');
+        return false;
+      }
+
+      if (!role || (role !== 'patient' && role !== 'clinic')) {
+        console.error('Invalid user role');
+        return false;
+      }
+
+      // Log login attempt WITHOUT password
+      console.log('Login attempt for:', { email: sanitizedEmail, role });
+      
+      // Mock successful login with enhanced security
       const mockUser: User = {
-        id: '123',
+        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: role === 'patient' ? 'Patient User' : 'Dr. Clinic User',
-        email,
+        email: sanitizedEmail,
         role
       };
       
-      // Store in local storage
-      localStorage.setItem('authenticated', 'true');
-      localStorage.setItem('userRole', role || '');
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      // Generate a mock JWT-like token
+      const authToken = `token_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
+      
+      // Store in sessionStorage instead of localStorage for better security
+      sessionStorage.setItem('authToken', authToken);
+      sessionStorage.setItem('userRole', role);
+      sessionStorage.setItem('user', JSON.stringify(mockUser));
       
       setUser(mockUser);
       setIsAuthenticated(true);
+      
+      console.log('Login successful for user:', sanitizedEmail);
       return true;
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login failed:', error instanceof Error ? error.message : 'Unknown error');
       return false;
     }
   };
 
-  // Mock registration for development
+  // Enhanced registration with proper validation
   const register = async (userData: { name: string; email: string; password: string; role: UserRole; [key: string]: any }): Promise<boolean> => {
     try {
-      // This would be replaced with an actual API call
-      console.log('Register attempt:', userData);
+      // Input validation and sanitization
+      const sanitizedName = sanitizeInput(userData.name);
+      const sanitizedEmail = sanitizeInput(userData.email);
+
+      if (!sanitizedName || sanitizedName.length < 2) {
+        console.error('Invalid name');
+        return false;
+      }
+
+      if (!isValidEmail(sanitizedEmail)) {
+        console.error('Invalid email format');
+        return false;
+      }
+
+      if (!isValidPassword(userData.password)) {
+        console.error('Password does not meet security requirements');
+        return false;
+      }
+
+      if (!userData.role || (userData.role !== 'patient' && userData.role !== 'clinic')) {
+        console.error('Invalid user role');
+        return false;
+      }
+
+      // Log registration attempt WITHOUT password or sensitive data
+      console.log('Registration attempt for:', { 
+        name: sanitizedName, 
+        email: sanitizedEmail, 
+        role: userData.role 
+      });
       
       // Mock successful registration
       const mockUser: User = {
-        id: '123',
-        name: userData.name,
-        email: userData.email,
+        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: sanitizedName,
+        email: sanitizedEmail,
         role: userData.role
       };
       
-      // Store in local storage
-      localStorage.setItem('authenticated', 'true');
-      localStorage.setItem('userRole', userData.role || '');
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      // Generate a mock JWT-like token
+      const authToken = `token_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
+      
+      // Store in sessionStorage instead of localStorage
+      sessionStorage.setItem('authToken', authToken);
+      sessionStorage.setItem('userRole', userData.role);
+      sessionStorage.setItem('user', JSON.stringify(mockUser));
       
       setUser(mockUser);
       setIsAuthenticated(true);
+      
+      console.log('Registration successful for user:', sanitizedEmail);
       return true;
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error('Registration failed:', error instanceof Error ? error.message : 'Unknown error');
       return false;
     }
   };
 
   const logout = () => {
-    // Clear storage and state
-    localStorage.removeItem('authenticated');
+    // Clear all storage and state
+    sessionStorage.clear();
+    localStorage.removeItem('authenticated'); // Clean up any old localStorage data
     localStorage.removeItem('userRole');
     localStorage.removeItem('user');
+    
     setUser(null);
     setIsAuthenticated(false);
+    
+    console.log('User logged out successfully');
   };
 
   return (
