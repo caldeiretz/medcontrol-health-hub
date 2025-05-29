@@ -8,10 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import ProfilePhotoUpload from "@/components/ProfilePhotoUpload";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   
   // Mock user data - in real app would come from auth context
   const [formData, setFormData] = useState({
@@ -32,6 +34,10 @@ const Profile = () => {
     }));
   };
 
+  const handlePhotoChange = (photoUrl: string | null) => {
+    setProfilePhoto(photoUrl);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -50,21 +56,46 @@ const Profile = () => {
           <Button
             variant="ghost"
             onClick={() => navigate('/patient/dashboard')}
-            className="gap-2"
+            className="gap-2 hover:bg-blue-50"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar ao Dashboard
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
+        {/* Profile Header */}
+        <Card className="bg-gradient-to-r from-blue-500 to-green-500 border-0 text-white shadow-xl mb-8">
+          <CardContent className="pt-8 pb-6">
+            <div className="flex items-center space-x-6">
+              <div className="transform hover:scale-105 transition-transform duration-200">
+                <ProfilePhotoUpload
+                  currentPhoto={profilePhoto}
+                  fallbackText={formData.name.split(' ').map(n => n[0]).join('')}
+                  size="lg"
+                  onPhotoChange={handlePhotoChange}
+                />
+              </div>
+              <div className="space-y-2 flex-1">
+                <h2 className="text-3xl font-bold text-white">{formData.name}</h2>
+                <p className="text-blue-100 text-lg">{formData.email}</p>
+                <div className="flex items-center gap-3">
+                  <div className="px-3 py-1 bg-white/20 rounded-full text-sm text-white">
+                    ● Paciente Ativo
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+            <CardTitle className="flex items-center gap-2 text-gray-800">
+              <User className="h-5 w-5 text-blue-500" />
               Informações Pessoais
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -74,6 +105,7 @@ const Profile = () => {
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     required
+                    className="border-2 focus:border-blue-400"
                   />
                 </div>
 
@@ -85,6 +117,7 @@ const Profile = () => {
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     required
+                    className="border-2 focus:border-blue-400"
                   />
                 </div>
 
@@ -95,6 +128,7 @@ const Profile = () => {
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     required
+                    className="border-2 focus:border-blue-400"
                   />
                 </div>
 
@@ -106,6 +140,7 @@ const Profile = () => {
                     value={formData.birthDate}
                     onChange={(e) => handleInputChange('birthDate', e.target.value)}
                     required
+                    className="border-2 focus:border-blue-400"
                   />
                 </div>
               </div>
@@ -117,6 +152,7 @@ const Profile = () => {
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   required
+                  className="border-2 focus:border-blue-400"
                 />
               </div>
 
@@ -127,11 +163,12 @@ const Profile = () => {
                   value={formData.city}
                   onChange={(e) => handleInputChange('city', e.target.value)}
                   required
+                  className="border-2 focus:border-blue-400"
                 />
               </div>
 
               <div className="border-t pt-6">
-                <h3 className="text-lg font-medium mb-4">Contato de Emergência</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Contato de Emergência</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="emergencyContact">Nome</Label>
@@ -140,6 +177,7 @@ const Profile = () => {
                       value={formData.emergencyContact}
                       onChange={(e) => handleInputChange('emergencyContact', e.target.value)}
                       required
+                      className="border-2 focus:border-blue-400"
                     />
                   </div>
 
@@ -150,6 +188,7 @@ const Profile = () => {
                       value={formData.emergencyPhone}
                       onChange={(e) => handleInputChange('emergencyPhone', e.target.value)}
                       required
+                      className="border-2 focus:border-blue-400"
                     />
                   </div>
                 </div>
@@ -160,14 +199,14 @@ const Profile = () => {
                   type="button"
                   variant="outline"
                   onClick={() => navigate('/patient/dashboard')}
-                  className="flex-1"
+                  className="flex-1 border-2 hover:bg-gray-50"
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 gap-2"
+                  className="flex-1 gap-2 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600"
                 >
                   {isLoading ? (
                     "Salvando..."

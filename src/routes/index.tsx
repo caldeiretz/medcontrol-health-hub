@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { createBrowserRouter } from "react-router-dom";
 
 // Landing page
 const Index = lazy(() => import('@/pages/Index'));
@@ -22,11 +23,12 @@ const PatientVitals = lazy(() => import('@/pages/patient/Vitals'));
 const PatientHistory = lazy(() => import('@/pages/patient/History'));
 const PatientSharing = lazy(() => import('@/pages/patient/Sharing'));
 const PatientProfile = lazy(() => import('@/pages/patient/Profile'));
+const PatientAccount = lazy(() => import('@/pages/patient/Account'));
 
 // Clinic pages
 const ClinicDashboard = lazy(() => import('@/pages/clinic/Dashboard'));
-const ClinicPatientView = lazy(() => import('@/pages/clinic/PatientView'));
 const ClinicPatients = lazy(() => import('@/pages/clinic/Patients'));
+const ClinicPatientView = lazy(() => import('@/pages/clinic/PatientView'));
 const ClinicAlerts = lazy(() => import('@/pages/clinic/Alerts'));
 const ClinicAccount = lazy(() => import('@/pages/clinic/Account'));
 
@@ -68,6 +70,93 @@ const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'p
   
   return children;
 };
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/auth/profile-choice",
+    element: <ProfileChoice />,
+  },
+  {
+    path: "/auth/patient-login",
+    element: <PatientLogin />,
+  },
+  {
+    path: "/auth/patient-register",
+    element: <PatientRegister />,
+  },
+  {
+    path: "/auth/clinic-login",
+    element: <ClinicLogin />,
+  },
+  {
+    path: "/auth/clinic-register",
+    element: <ClinicRegister />,
+  },
+  {
+    path: "/patient/dashboard",
+    element: <PatientDashboard />,
+  },
+  {
+    path: "/patient/medications",
+    element: <PatientMedications />,
+  },
+  {
+    path: "/patient/medications/add",
+    element: <PatientAddMedication />,
+  },
+  {
+    path: "/patient/medications/edit/:id",
+    element: <PatientEditMedication />,
+  },
+  {
+    path: "/patient/vitals",
+    element: <PatientVitals />,
+  },
+  {
+    path: "/patient/history",
+    element: <PatientHistory />,
+  },
+  {
+    path: "/patient/sharing",
+    element: <PatientSharing />,
+  },
+  {
+    path: "/patient/profile",
+    element: <PatientProfile />,
+  },
+  {
+    path: "/patient/account",
+    element: <PatientAccount />,
+  },
+  {
+    path: "/clinic/dashboard",
+    element: <ClinicDashboard />,
+  },
+  {
+    path: "/clinic/patients",
+    element: <ClinicPatients />,
+  },
+  {
+    path: "/clinic/patient/:id",
+    element: <ClinicPatientView />,
+  },
+  {
+    path: "/clinic/alerts",
+    element: <ClinicAlerts />,
+  },
+  {
+    path: "/clinic/account",
+    element: <ClinicAccount />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);
 
 const AppRoutes = () => {
   return (
@@ -143,6 +232,14 @@ const AppRoutes = () => {
           element={
             <AuthGuard userType="patient">
               <PatientProfile />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/patient/account" 
+          element={
+            <AuthGuard userType="patient">
+              <PatientAccount />
             </AuthGuard>
           } 
         />
