@@ -39,11 +39,11 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Enhanced Auth guard with better security
+// Enhanced Auth guard with comprehensive security checks
 const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'patient' | 'clinic' }) => {
   const { isAuthenticated, user } = useAuth();
   
-  // Check authentication state from context instead of localStorage
+  // Primary authentication check
   if (!isAuthenticated || !user) {
     console.log('Access denied: User not authenticated');
     return <Navigate to="/auth/profile-choice" replace />;
@@ -55,9 +55,16 @@ const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'p
     return <Navigate to={user.role === 'patient' ? '/patient/dashboard' : '/clinic/dashboard'} replace />;
   }
   
-  // Additional security check for valid user data
+  // Additional security checks for valid user data
   if (!user.id || !user.email) {
-    console.log('Access denied: Invalid user data');
+    console.log('Access denied: Invalid user data detected');
+    return <Navigate to="/auth/profile-choice" replace />;
+  }
+
+  // Check for valid session token
+  const authToken = sessionStorage.getItem('authToken');
+  if (!authToken) {
+    console.log('Access denied: No valid session token');
     return <Navigate to="/auth/profile-choice" replace />;
   }
   

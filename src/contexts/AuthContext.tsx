@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { sanitizeInput, validateEmail, validatePassword } from '@/utils/security';
 
 type UserRole = 'patient' | 'clinic' | null;
 
@@ -26,25 +27,6 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
-
-// Utility function to sanitize input
-const sanitizeInput = (input: string): string => {
-  return input.trim().replace(/[<>\"'&]/g, '');
-};
-
-// Validate email format
-const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-// Validate password strength
-const isValidPassword = (password: string): boolean => {
-  return password.length >= 8 && 
-         /[A-Z]/.test(password) && 
-         /[a-z]/.test(password) && 
-         /[0-9]/.test(password);
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -76,19 +58,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Enhanced login with proper validation
+  // Enhanced login with proper validation and NO password logging
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
     try {
       // Input validation and sanitization
       const sanitizedEmail = sanitizeInput(email);
       
-      if (!isValidEmail(sanitizedEmail)) {
+      if (!validateEmail(sanitizedEmail)) {
         console.error('Invalid email format');
         return false;
       }
 
-      if (!isValidPassword(password)) {
-        console.error('Password does not meet security requirements');
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.isValid) {
+        console.error('Password validation failed:', passwordValidation.errors);
         return false;
       }
 
@@ -97,8 +80,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Log login attempt WITHOUT password
-      console.log('Login attempt for:', { email: sanitizedEmail, role });
+      // Log login attempt WITHOUT any sensitive data
+      console.log('Login attempt for email:', sanitizedEmail, 'role:', role);
       
       // Mock successful login with enhanced security
       const mockUser: User = {
@@ -108,10 +91,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role
       };
       
-      // Generate a mock JWT-like token
+      // Generate a secure mock token
       const authToken = `token_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
       
-      // Store in sessionStorage instead of localStorage for better security
+      // Store in sessionStorage for better security than localStorage
       sessionStorage.setItem('authToken', authToken);
       sessionStorage.setItem('userRole', role);
       sessionStorage.setItem('user', JSON.stringify(mockUser));
@@ -139,13 +122,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      if (!isValidEmail(sanitizedEmail)) {
+      if (!validateEmail(sanitizedEmail)) {
         console.error('Invalid email format');
         return false;
       }
 
-      if (!isValidPassword(userData.password)) {
-        console.error('Password does not meet security requirements');
+      const passwordValidation = validatePassword(userData.password);
+      if (!passwordValidation.isValid) {
+        console.error('Password validation failed:', passwordValidation.errors);
         return false;
       }
 
@@ -169,10 +153,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: userData.role
       };
       
-      // Generate a mock JWT-like token
+      // Generate a secure mock token
       const authToken = `token_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
       
-      // Store in sessionStorage instead of localStorage
+      // Store in sessionStorage
       sessionStorage.setItem('authToken', authToken);
       sessionStorage.setItem('userRole', userData.role);
       sessionStorage.setItem('user', JSON.stringify(mockUser));
@@ -189,7 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    // Clear all storage and state
+    // Clear all storage and state securely
     sessionStorage.clear();
     localStorage.removeItem('authenticated'); // Clean up any old localStorage data
     localStorage.removeItem('userRole');
