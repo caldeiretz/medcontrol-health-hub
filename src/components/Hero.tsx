@@ -14,23 +14,23 @@ const Hero = () => {
   const handleGetStarted = () => {
     navigate('/auth/profile-choice');
   };
-  return <section className="pt-20 pb-16 bg-gradient-to-br from-blue-50 via-white to-green-50">
+  return <section className="pt-20 pb-16 bg-gradient-to-br from-blue-50 via-white to-green-50 my-[43px]">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="space-y-8">
             <div className="space-y-6">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight text-left lg:text-7xl">
                 Seu tratamento, 
                 <span className="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
                   {" "}na hora certa
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-600 leading-relaxed text-center">
+              <p className="text-xl md:text-2xl text-gray-600 leading-relaxed text-left">
                 MedControl ajuda você a lembrar e acompanhar seus medicamentos com 
                 <strong className="text-gray-800"> segurança e simplicidade</strong>.
               </p>
-              <p className="text-lg text-gray-500 text-center">
+              <p className="text-lg text-gray-500 text-left">
                 Ideal para pacientes crônicos e médicos que querem melhorar o cuidado com seus pacientes.
               </p>
             </div>
