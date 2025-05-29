@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User, Mail, Phone, MapPin, Calendar, CreditCard, Shield, Download, Save, Bell, Database, Wifi, Settings } from "lucide-react";
 import ClinicLayout from "@/components/layouts/ClinicLayout";
@@ -13,9 +12,25 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Account = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  
   const [profile, setProfile] = useState({
     name: "Dr. João Silva",
     email: "joao.silva@clinica.com",
@@ -50,6 +65,8 @@ const Account = () => {
 
   const [currentPlan] = useState("pro");
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const handleSaveProfile = () => {
     setIsLoading(true);
@@ -137,6 +154,44 @@ const Account = () => {
         description: "Sua solicitação de cancelamento foi enviada.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== "EXCLUIR") {
+      toast({
+        title: "Confirmação incorreta",
+        description: "Por favor, digite 'EXCLUIR' para confirmar a exclusão da conta.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    
+    try {
+      // Simular processo de exclusão da conta
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      toast({
+        title: "Conta excluída",
+        description: "Sua conta foi excluída permanentemente.",
+        variant: "destructive"
+      });
+
+      // Fazer logout e redirecionar
+      logout();
+      navigate('/');
+      
+    } catch (error) {
+      toast({
+        title: "Erro ao excluir conta",
+        description: "Ocorreu um erro. Tente novamente mais tarde.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeletingAccount(false);
+      setDeleteConfirmation("");
     }
   };
 
@@ -665,9 +720,56 @@ const Account = () => {
                   <p className="text-sm text-gray-500 mb-4">
                     Ações irreversíveis que afetam permanentemente sua conta.
                   </p>
-                  <Button variant="destructive" className="w-full">
-                    Excluir Conta Permanentemente
-                  </Button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="w-full">
+                        Excluir Conta Permanentemente
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-red-600">
+                          Excluir Conta Permanentemente
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-3">
+                          <p>
+                            <strong>Esta ação é irreversível!</strong> Ao excluir sua conta, você perderá permanentemente:
+                          </p>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            <li>Todos os dados dos pacientes</li>
+                            <li>Histórico de medicamentos e tratamentos</li>
+                            <li>Relatórios e estatísticas</li>
+                            <li>Configurações personalizadas</li>
+                            <li>Dados de faturamento e pagamentos</li>
+                          </ul>
+                          <p className="text-sm">
+                            Para confirmar a exclusão, digite <strong>EXCLUIR</strong> no campo abaixo:
+                          </p>
+                          <Input
+                            placeholder="Digite EXCLUIR para confirmar"
+                            value={deleteConfirmation}
+                            onChange={(e) => setDeleteConfirmation(e.target.value)}
+                            className="mt-2"
+                          />
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel 
+                          onClick={() => setDeleteConfirmation("")}
+                        >
+                          Cancelar
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          disabled={deleteConfirmation !== "EXCLUIR" || isDeletingAccount}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {isDeletingAccount ? "Excluindo..." : "Excluir Conta"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </CardContent>
               </Card>
             </div>
