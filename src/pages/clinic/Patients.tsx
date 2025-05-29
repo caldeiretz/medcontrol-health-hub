@@ -49,7 +49,6 @@ const Patients = () => {
   return (
     <ClinicLayout title="Gerenciar Pacientes">
       <div className="space-y-6">
-        {/* Estatísticas */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
@@ -91,7 +90,6 @@ const Patients = () => {
           </Card>
         </div>
 
-        {/* Filtros e Busca */}
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -141,7 +139,6 @@ const Patients = () => {
           </CardContent>
         </Card>
 
-        {/* Tabela de Pacientes */}
         <Card>
           <CardContent className="p-0">
             <Table>
