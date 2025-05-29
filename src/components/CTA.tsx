@@ -1,25 +1,19 @@
-
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Users, Building } from 'lucide-react';
-
 const CTA = () => {
   const navigate = useNavigate();
-
   const handlePatientSignUp = () => {
     navigate('/auth/patient-register');
   };
-
   const handleClinicSignUp = () => {
     navigate('/auth/clinic-register');
   };
-
-  return (
-    <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-green-600">
+  return <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-green-600">
       <div className="container mx-auto px-4">
         <div className="text-center space-y-8">
           <div className="space-y-6">
-            <h2 className="text-4xl md:text-5xl font-bold text-white">
+            <h2 className="text-4xl md:text-5xl font-bold text-white text-center">
               Comece hoje mesmo a cuidar melhor da saúde com o 
               <span className="text-blue-200"> MedControl</span>
             </h2>
@@ -30,22 +24,13 @@ const CTA = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <Button 
-              size="lg" 
-              className="bg-white text-blue-700 font-semibold text-lg px-8 py-4 hover:bg-blue-50 transition-all duration-300 shadow-lg group"
-              onClick={handlePatientSignUp}
-            >
+            <Button size="lg" className="bg-white text-blue-700 font-semibold text-lg px-8 py-4 hover:bg-blue-50 transition-all duration-300 shadow-lg group" onClick={handlePatientSignUp}>
               <Users className="mr-3 group-hover:scale-110 transition-transform" size={20} />
               Criar Conta (Paciente)
               <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" size={20} />
             </Button>
             
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="border-2 border-white text-white font-semibold text-lg px-8 py-4 hover:bg-white hover:text-blue-700 transition-all duration-300 group"
-              onClick={handleClinicSignUp}
-            >
+            <Button size="lg" variant="outline" onClick={handleClinicSignUp} className="border-2 border-white font-semibold text-lg px-8 py-4 hover:bg-white transition-all duration-300 group text-blue-700">
               <Building className="mr-3 group-hover:scale-110 transition-transform" size={20} />
               Criar Conta (Clínica)
               <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" size={20} />
@@ -79,8 +64,6 @@ const CTA = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default CTA;

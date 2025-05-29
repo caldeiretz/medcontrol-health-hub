@@ -1,33 +1,24 @@
-
 import { Button } from '@/components/ui/button';
 import { Heart, Smartphone, Users, Shield } from 'lucide-react';
-
 const ParaPacientes = () => {
-  const benefits = [
-    {
-      icon: Smartphone,
-      title: "Fácil de usar",
-      description: "Interface simples e intuitiva, ideal para todas as idades"
-    },
-    {
-      icon: Heart,
-      title: "Visual limpo e claro",
-      description: "Design pensado para facilitar a leitura e navegação"
-    },
-    {
-      icon: Users,
-      title: "Uso flexível",
-      description: "Pode ser usado sozinho ou conectado com sua clínica"
-    },
-    {
-      icon: Shield,
-      title: "Privacidade garantida",
-      description: "Suas informações só são compartilhadas com seu consentimento"
-    }
-  ];
-
-  return (
-    <section id="para-pacientes" className="py-20 bg-gradient-to-br from-green-50 to-white">
+  const benefits = [{
+    icon: Smartphone,
+    title: "Fácil de usar",
+    description: "Interface simples e intuitiva, ideal para todas as idades"
+  }, {
+    icon: Heart,
+    title: "Visual limpo e claro",
+    description: "Design pensado para facilitar a leitura e navegação"
+  }, {
+    icon: Users,
+    title: "Uso flexível",
+    description: "Pode ser usado sozinho ou conectado com sua clínica"
+  }, {
+    icon: Shield,
+    title: "Privacidade garantida",
+    description: "Suas informações só são compartilhadas com seu consentimento"
+  }];
+  return <section id="para-pacientes" className="py-20 bg-gradient-to-br from-green-50 to-white">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Mobile App Preview */}
@@ -52,7 +43,9 @@ const ParaPacientes = () => {
                     <span className="text-green-600 font-bold">3/4</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-green-400 to-green-500 h-2 rounded-full" style={{width: '75%'}}></div>
+                    <div className="bg-gradient-to-r from-green-400 to-green-500 h-2 rounded-full" style={{
+                    width: '75%'
+                  }}></div>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">Você está indo muito bem!</p>
                 </div>
@@ -101,16 +94,16 @@ const ParaPacientes = () => {
           {/* Content */}
           <div className="order-1 lg:order-2 space-y-8">
             <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
                 Você no controle da 
                 <span className="text-green-600"> sua saúde</span>
               </h2>
-              <p className="text-xl text-gray-600 leading-relaxed">
+              <p className="text-xl text-gray-600 leading-relaxed text-center">
                 Com lembretes, gráficos e um toque por dia, o MedControl ajuda você a seguir 
                 seu tratamento e compartilhar informações com quem cuida de você.
               </p>
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-green-800 font-medium">
+                <p className="text-green-800 font-medium text-center">
                   🔒 Suas informações só serão compartilhadas com o seu consentimento
                 </p>
               </div>
@@ -118,8 +111,7 @@ const ParaPacientes = () => {
 
             {/* Benefits List */}
             <div className="space-y-4">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-start space-x-4">
+              {benefits.map((benefit, index) => <div key={index} className="flex items-start space-x-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
                     <benefit.icon size={20} className="text-white" />
                   </div>
@@ -127,18 +119,15 @@ const ParaPacientes = () => {
                     <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
                     <p className="text-gray-600">{benefit.description}</p>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
 
-            <Button className="bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold px-8 py-4 text-lg hover:from-green-700 hover:to-green-800 transition-all duration-300">
+            <Button className="bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold text-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 text-center px-[23px] py-[17px] my-[20px] mx-[27px]">
               Começar Agora - É Grátis!
             </Button>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default ParaPacientes;
