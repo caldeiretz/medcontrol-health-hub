@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Share2, Search, Loader2, UserCheck, X, Check } from "lucide-react";
@@ -216,7 +217,7 @@ const Sharing = () => {
                 {connectedClinics.map((clinic) => (
                   <Card key={clinic.id}>
                     <CardContent className="p-5">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
                             <UserCheck className="h-5 w-5 text-green-600" />
@@ -241,7 +242,7 @@ const Sharing = () => {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full lg:w-auto"
                               onClick={() => setConfirmDisconnect(clinic.id)}
                             >
                               <X className="h-4 w-4 mr-1" />
