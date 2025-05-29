@@ -158,6 +158,34 @@ const History = () => {
     }
   };
 
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Call the export function with the current data
+      await exportHistoryToPDF(
+        mockMedicationHistory,
+        mockVitalsHistory,
+        adherencePercentage,
+        timeframe
+      );
+      
+      toast({
+        title: "Histórico exportado com sucesso!",
+        description: "O arquivo PDF foi baixado para o seu dispositivo.",
+      });
+    } catch (error) {
+      console.error("Erro ao exportar histórico:", error);
+      toast({
+        title: "Erro ao exportar histórico",
+        description: "Ocorreu um erro ao gerar o arquivo PDF. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <PatientLayout title="Histórico">
       <div className="mb-8">
