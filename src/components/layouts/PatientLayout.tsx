@@ -1,70 +1,52 @@
-
 import { ReactNode, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Pill, 
-  Activity, 
-  History, 
-  Share2, 
-  User, 
-  LogOut,
-  Menu,
-  X
-} from "lucide-react";
+import { LayoutDashboard, Pill, Activity, History, Share2, User, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
 interface PatientLayoutProps {
   children: ReactNode;
   title: string;
 }
-
-const PatientLayout = ({ children, title }: PatientLayoutProps) => {
-  const { user, logout } = useAuth();
+const PatientLayout = ({
+  children,
+  title
+}: PatientLayoutProps) => {
+  const {
+    user,
+    logout
+  } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
   const handleLogout = () => {
     logout();
     navigate('/');
   };
-
   const handleProfileClick = () => {
     navigate('/patient/profile');
   };
-
-  const navigationItems = [
-    {
-      name: "Início",
-      path: "/patient/dashboard",
-      icon: <LayoutDashboard className="h-5 w-5" />
-    },
-    {
-      name: "Medicações",
-      path: "/patient/medications",
-      icon: <Pill className="h-5 w-5" />
-    },
-    {
-      name: "Sinais Vitais",
-      path: "/patient/vitals",
-      icon: <Activity className="h-5 w-5" />
-    },
-    {
-      name: "Histórico",
-      path: "/patient/history",
-      icon: <History className="h-5 w-5" />
-    },
-    {
-      name: "Compartilhar",
-      path: "/patient/sharing",
-      icon: <Share2 className="h-5 w-5" />
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+  const navigationItems = [{
+    name: "Início",
+    path: "/patient/dashboard",
+    icon: <LayoutDashboard className="h-5 w-5" />
+  }, {
+    name: "Medicações",
+    path: "/patient/medications",
+    icon: <Pill className="h-5 w-5" />
+  }, {
+    name: "Sinais Vitais",
+    path: "/patient/vitals",
+    icon: <Activity className="h-5 w-5" />
+  }, {
+    name: "Histórico",
+    path: "/patient/history",
+    icon: <History className="h-5 w-5" />
+  }, {
+    name: "Compartilhar",
+    path: "/patient/sharing",
+    icon: <Share2 className="h-5 w-5" />
+  }];
+  return <div className="min-h-screen bg-gray-50">
       {/* Desktop Sidebar */}
       <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col bg-white shadow-md lg:flex">
         <div className="flex h-16 items-center justify-center border-b px-4">
@@ -78,25 +60,17 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
         
         <nav className="flex-1 px-4 pt-6">
           <ul className="space-y-2">
-            {navigationItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className="flex items-center rounded-lg px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                >
+            {navigationItems.map(item => <li key={item.path}>
+                <Link to={item.path} className="flex items-center rounded-lg px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                   {item.icon}
                   <span className="ml-3">{item.name}</span>
                 </Link>
-              </li>
-            ))}
+              </li>)}
           </ul>
         </nav>
         
         <div className="border-t p-4">
-          <div 
-            className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
-            onClick={handleProfileClick}
-          >
+          <div className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors" onClick={handleProfileClick}>
             <div className="flex items-center">
               <div className="rounded-full bg-gray-200 p-1">
                 <User className="h-6 w-6 text-gray-600" />
@@ -107,11 +81,7 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
               </div>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start gap-2 text-red-600" 
-            onClick={handleLogout}
-          >
+          <Button variant="outline" className="w-full justify-start gap-2 text-red-600" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             Sair
           </Button>
@@ -142,40 +112,27 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
                 </div>
                 <span className="text-xl font-bold text-gray-800">MedControl</span>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
+              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
             
             <nav className="flex-1 px-4 pt-6">
               <ul className="space-y-2">
-                {navigationItems.map((item) => (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className="flex items-center rounded-lg px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
+                {navigationItems.map(item => <li key={item.path}>
+                    <Link to={item.path} className="flex items-center rounded-lg px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
                       {item.icon}
                       <span className="ml-3">{item.name}</span>
                     </Link>
-                  </li>
-                ))}
+                  </li>)}
               </ul>
             </nav>
             
             <div className="border-t p-4">
-              <div 
-                className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
-                onClick={() => {
-                  handleProfileClick();
-                  setIsMobileMenuOpen(false);
-                }}
-              >
+              <div className="flex items-center justify-between mb-4 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors" onClick={() => {
+              handleProfileClick();
+              setIsMobileMenuOpen(false);
+            }}>
                 <div className="flex items-center">
                   <div className="rounded-full bg-gray-200 p-1">
                     <User className="h-6 w-6 text-gray-600" />
@@ -186,11 +143,7 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
                   </div>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-2 text-red-600" 
-                onClick={handleLogout}
-              >
+              <Button variant="outline" className="w-full justify-start gap-2 text-red-600" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
                 Sair
               </Button>
@@ -202,12 +155,10 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
       {/* Main Content */}
       <main className="lg:pl-64 pb-16">
         <div className="px-4 py-8 md:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-8">{title}</h1>
+          <h1 className="font-bold text-gray-900 mb-8 text-center mx-0 text-3xl">{title}</h1>
           {children}
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default PatientLayout;

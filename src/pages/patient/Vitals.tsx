@@ -162,11 +162,11 @@ const Vitals = () => {
   return <PatientLayout title="Sinais Vitais">
       <div className="mb-8">
         <div className="flex flex-col gap-4 mb-6">
-          <p className="text-gray-600 font-normal">
+          <p className="text-gray-600 font-normal text-center mx-[11px] px-0 py-0 my-0">
             Acompanhe e registre seus sinais vitais para melhor controle da sua saúde
           </p>
           <div className="flex justify-end">
-            <Button onClick={() => setShowForm(!showForm)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setShowForm(!showForm)} className="bg-blue-600 hover:bg-blue-700 px-[34px] mx-[46px]">
               <Plus className="mr-1 h-4 w-4" />
               {showForm ? "Cancelar" : "Registrar Sinal Vital"}
             </Button>
