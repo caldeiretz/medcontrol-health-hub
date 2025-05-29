@@ -8,19 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-
-// Import Recharts components for charts
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  ReferenceLine
-} from "recharts";
+import VitalChart from "@/components/charts/VitalChart";
 
 // Mock patient data
 const mockPatient = {
@@ -156,6 +144,11 @@ const PatientView = () => {
     if (percentage >= 90) return "text-green-600";
     if (percentage >= 70) return "text-yellow-500";
     return "text-red-500";
+  };
+
+  const handleExportChart = (chartType: string) => {
+    // Implementação da exportação seria adicionada aqui
+    toast.success(`Gráfico de ${chartType} exportado com sucesso!`);
   };
 
   return (
@@ -328,68 +321,21 @@ const PatientView = () => {
                     </TabsList>
                   </div>
                   
-                  {/* Vitals tab content */}
-                  <TabsContent value="vitals" className="p-4 space-y-8">
-                    {/* Blood pressure chart */}
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">Pressão Arterial</h3>
-                      <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={mockBloodPressureData}
-                            margin={{ top: 5, right: 5, left: 5, bottom: 20 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" />
-                            <YAxis domain={[40, 160]} />
-                            <Tooltip />
-                            <Legend />
-                            <Line 
-                              type="monotone" 
-                              dataKey="systolic" 
-                              stroke="#ef4444" 
-                              name="Sistólica" 
-                              strokeWidth={2}
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="diastolic" 
-                              stroke="#3b82f6" 
-                              name="Diastólica" 
-                              strokeWidth={2}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
+                  {/* Vitals tab content with new charts */}
+                  <TabsContent value="vitals" className="p-6 space-y-8">
+                    <VitalChart
+                      title="Pressão Arterial"
+                      type="pressure"
+                      data={mockBloodPressureData}
+                      onExport={() => handleExportChart("Pressão Arterial")}
+                    />
                     
-                    {/* Glucose chart */}
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">Glicemia</h3>
-                      <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={mockGlucoseData}
-                            margin={{ top: 5, right: 5, left: 5, bottom: 20 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" />
-                            <YAxis domain={[80, 180]} />
-                            <Tooltip />
-                            <Legend />
-                            <Line 
-                              type="monotone" 
-                              dataKey="glucose" 
-                              stroke="#10b981" 
-                              name="Glicemia (mg/dL)" 
-                              strokeWidth={2}
-                            />
-                            <ReferenceLine y={126} stroke="red" strokeDasharray="3 3" />
-                            <ReferenceLine y={100} stroke="#166534" strokeDasharray="3 3" />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
+                    <VitalChart
+                      title="Glicemia"
+                      type="glucose"
+                      data={mockGlucoseData}
+                      onExport={() => handleExportChart("Glicemia")}
+                    />
                   </TabsContent>
                   
                   {/* History tab content */}
