@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Activity, Search, AlertCircle, Clock, ChevronRight } from "lucide-react";
+import { Users, Activity, Search, AlertCircle, Clock, ChevronRight, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ClinicLayout from "@/components/layouts/ClinicLayout";
 import { Button } from "@/components/ui/button";
@@ -138,64 +137,64 @@ const ClinicDashboard = () => {
   return (
     <ClinicLayout title="Painel de Monitoramento">
       <div className="mb-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-6 md:mb-8">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total de Pacientes</CardTitle>
-              <CardDescription>Pacientes compartilhando dados</CardDescription>
+              <CardTitle className="text-base md:text-lg">Total de Pacientes</CardTitle>
+              <CardDescription className="text-sm">Pacientes compartilhando dados</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="rounded-full bg-blue-100 p-3">
-                  <Users className="h-6 w-6 text-blue-600" />
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="rounded-full bg-blue-100 p-2 md:p-3">
+                  <Users className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
                 </div>
-                <span className="text-3xl font-semibold">{mockPatients.length}</span>
+                <span className="text-2xl md:text-3xl font-semibold">{mockPatients.length}</span>
               </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Adesão Média</CardTitle>
-              <CardDescription>Medicamentos tomados corretamente</CardDescription>
+              <CardTitle className="text-base md:text-lg">Adesão Média</CardTitle>
+              <CardDescription className="text-sm">Medicamentos tomados corretamente</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="rounded-full bg-green-100 p-3">
-                  <Check className="h-6 w-6 text-green-600" />
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="rounded-full bg-green-100 p-2 md:p-3">
+                  <Check className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
                 </div>
-                <span className="text-3xl font-semibold">83%</span>
+                <span className="text-2xl md:text-3xl font-semibold">83%</span>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="md:col-span-2 lg:col-span-1">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Alertas</CardTitle>
-              <CardDescription>Necessitam de atenção</CardDescription>
+              <CardTitle className="text-base md:text-lg">Alertas</CardTitle>
+              <CardDescription className="text-sm">Necessitam de atenção</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="rounded-full bg-red-100 p-3">
-                  <AlertCircle className="h-6 w-6 text-red-600" />
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="rounded-full bg-red-100 p-2 md:p-3">
+                  <AlertCircle className="h-5 w-5 md:h-6 md:w-6 text-red-600" />
                 </div>
-                <span className="text-3xl font-semibold">{mockAlerts.length}</span>
+                <span className="text-2xl md:text-3xl font-semibold">{mockAlerts.length}</span>
               </div>
             </CardContent>
           </Card>
         </div>
         
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+        <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 min-w-0">
             <Card className="h-full">
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Seus Pacientes</CardTitle>
-                  <div className="relative w-64">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="text-base md:text-lg">Seus Pacientes</CardTitle>
+                  <div className="relative w-full sm:w-64">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                       placeholder="Buscar paciente..."
-                      className="pl-8"
+                      className="pl-8 text-sm"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -208,42 +207,42 @@ const ClinicDashboard = () => {
                     {filteredPatients.map((patient) => (
                       <div 
                         key={patient.id} 
-                        className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-3 md:p-4 hover:bg-gray-50 transition-colors cursor-pointer min-w-0"
                         onClick={() => handleViewPatient(patient.id)}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
-                            <span className="font-medium text-gray-600">{patient.avatar}</span>
+                        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                          <div className="flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
+                            <span className="font-medium text-gray-600 text-xs md:text-sm">{patient.avatar}</span>
                           </div>
-                          <div>
-                            <p className="font-medium">{patient.name}</p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-gray-500">{patient.age} anos</span>
-                              <span className="inline-flex h-1 w-1 rounded-full bg-gray-300"></span>
-                              <span className="text-sm text-gray-500">{patient.condition}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm md:text-base truncate">{patient.name}</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                              <span className="text-xs md:text-sm text-gray-500">{patient.age} anos</span>
+                              <span className="hidden sm:inline-flex h-1 w-1 rounded-full bg-gray-300"></span>
+                              <span className="text-xs md:text-sm text-gray-500 truncate">{patient.condition}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2 md:gap-6 shrink-0">
                           <div className="text-center">
-                            <p className="text-xs text-gray-500 mb-1">Adesão</p>
+                            <p className="text-xs text-gray-500 mb-1 hidden sm:block">Adesão</p>
                             <div className="flex items-center gap-1">
                               <span className={`h-2 w-2 rounded-full ${getAdherenceColor(patient.adherence)}`}></span>
-                              <span className="font-medium">{patient.adherence}%</span>
+                              <span className="font-medium text-xs md:text-sm">{patient.adherence}%</span>
                             </div>
                           </div>
                           {patient.alerts > 0 && (
-                            <div className="flex items-center justify-center rounded-full bg-red-100 h-6 w-6 text-xs font-medium text-red-600">
+                            <div className="flex items-center justify-center rounded-full bg-red-100 h-5 w-5 md:h-6 md:w-6 text-xs font-medium text-red-600">
                               {patient.alerts}
                             </div>
                           )}
-                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                          <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-gray-500">
+                  <div className="py-8 text-center text-gray-500 text-sm">
                     Nenhum paciente encontrado
                   </div>
                 )}
@@ -251,10 +250,10 @@ const ClinicDashboard = () => {
             </Card>
           </div>
           
-          <div>
+          <div className="min-w-0">
             <Card className="h-full">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Alertas Recentes</CardTitle>
+                <CardTitle className="text-base md:text-lg">Alertas Recentes</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {mockAlerts.length > 0 ? (
@@ -262,16 +261,16 @@ const ClinicDashboard = () => {
                     {mockAlerts.map((alert) => (
                       <div 
                         key={alert.id} 
-                        className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="p-3 md:p-4 hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() => handleViewPatient(alert.patientId)}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5">
+                        <div className="flex items-start gap-2 md:gap-3">
+                          <div className="mt-0.5 shrink-0">
                             {getAlertIcon(alert.type)}
                           </div>
-                          <div>
-                            <p className="font-medium">{alert.patientName}</p>
-                            <p className="text-sm text-gray-700 mb-1">{alert.description}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm md:text-base truncate">{alert.patientName}</p>
+                            <p className="text-xs md:text-sm text-gray-700 mb-1">{alert.description}</p>
                             <p className="text-xs text-gray-500">{alert.time}</p>
                           </div>
                         </div>
@@ -279,13 +278,13 @@ const ClinicDashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-gray-500">
+                  <div className="py-8 text-center text-gray-500 text-sm">
                     Nenhum alerta recente
                   </div>
                 )}
                 
-                <div className="p-4 border-t">
-                  <Button variant="outline" className="w-full">Ver todos os alertas</Button>
+                <div className="p-3 md:p-4 border-t">
+                  <Button variant="outline" className="w-full text-sm">Ver todos os alertas</Button>
                 </div>
               </CardContent>
             </Card>
