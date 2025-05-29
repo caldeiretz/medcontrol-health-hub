@@ -161,14 +161,16 @@ const Vitals = () => {
   const watchVitalType = form.watch('vitalType');
   return <PatientLayout title="Sinais Vitais">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col gap-4 mb-6">
           <p className="text-gray-600 font-normal">
             Acompanhe e registre seus sinais vitais para melhor controle da sua saúde
           </p>
-          <Button onClick={() => setShowForm(!showForm)} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="mr-1 h-4 w-4" />
-            {showForm ? "Cancelar" : "Registrar Sinal Vital"}
-          </Button>
+          <div className="flex justify-end">
+            <Button onClick={() => setShowForm(!showForm)} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="mr-1 h-4 w-4" />
+              {showForm ? "Cancelar" : "Registrar Sinal Vital"}
+            </Button>
+          </div>
         </div>
         
         {/* Form for adding vitals */}
