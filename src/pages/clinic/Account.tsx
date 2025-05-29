@@ -25,11 +25,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import ProfilePhotoUpload from "@/components/ProfilePhotoUpload";
 
 const Account = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   
   const [profile, setProfile] = useState({
     name: "Dr. João Silva",
@@ -195,6 +197,10 @@ const Account = () => {
     }
   };
 
+  const handlePhotoChange = (photoUrl: string | null) => {
+    setProfilePhoto(photoUrl);
+  };
+
   const plans = [
     {
       id: "basic",
@@ -222,19 +228,28 @@ const Account = () => {
   return (
     <ClinicLayout title="Conta & Configurações">
       <div className="max-w-4xl space-y-6">
-        {/* Cabeçalho do Perfil */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-20 w-20">
-                <AvatarFallback className="text-xl">JS</AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <h2 className="text-2xl font-bold">{profile.name}</h2>
-                <p className="text-gray-500">{profile.specialty}</p>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{profile.crm}</Badge>
-                  <Badge className="bg-green-100 text-green-800">Ativo</Badge>
+        {/* Cabeçalho do Perfil Modernizado */}
+        <Card className="bg-gradient-to-r from-blue-500 to-green-500 border-0 text-white shadow-xl">
+          <CardContent className="pt-8 pb-6">
+            <div className="flex items-center space-x-6">
+              <div className="transform hover:scale-105 transition-transform duration-200">
+                <ProfilePhotoUpload
+                  currentPhoto={profilePhoto}
+                  fallbackText={profile.name.split(' ').map(n => n[0]).join('')}
+                  size="lg"
+                  onPhotoChange={handlePhotoChange}
+                />
+              </div>
+              <div className="space-y-2 flex-1">
+                <h2 className="text-3xl font-bold text-white">{profile.name}</h2>
+                <p className="text-blue-100 text-lg">{profile.specialty}</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                    {profile.crm}
+                  </Badge>
+                  <Badge className="bg-green-500/30 text-green-100 border-green-300/50">
+                    ● Ativo
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -242,86 +257,98 @@ const Account = () => {
         </Card>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="profile">Perfil</TabsTrigger>
-            <TabsTrigger value="clinic">Clínica</TabsTrigger>
-            <TabsTrigger value="notifications">Notificações</TabsTrigger>
-            <TabsTrigger value="monitoring">Monitoramento</TabsTrigger>
-            <TabsTrigger value="subscription">Assinatura</TabsTrigger>
-            <TabsTrigger value="security">Segurança</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6 bg-white shadow-sm border border-gray-200">
+            <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white">Perfil</TabsTrigger>
+            <TabsTrigger value="clinic" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white">Clínica</TabsTrigger>
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white">Notificações</TabsTrigger>
+            <TabsTrigger value="monitoring" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white">Monitoramento</TabsTrigger>
+            <TabsTrigger value="subscription" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white">Assinatura</TabsTrigger>
+            <TabsTrigger value="security" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white">Segurança</TabsTrigger>
           </TabsList>
 
           {/* Perfil do Médico */}
           <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <User className="h-5 w-5 text-blue-500" />
                   Informações Pessoais
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
+              <CardContent className="space-y-6 pt-6">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nome Completo</Label>
+                    <Label htmlFor="name" className="text-gray-700 font-medium">Nome Completo</Label>
                     <Input 
                       id="name"
                       value={profile.name}
                       onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                      className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">E-mail</Label>
+                    <Label htmlFor="email" className="text-gray-700 font-medium">E-mail</Label>
                     <Input 
                       id="email"
                       type="email"
                       value={profile.email}
                       onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
+                      className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone</Label>
+                    <Label htmlFor="phone" className="text-gray-700 font-medium">Telefone</Label>
                     <Input 
                       id="phone"
                       value={profile.phone}
                       onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                      className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="crm">CRM</Label>
+                    <Label htmlFor="crm" className="text-gray-700 font-medium">CRM</Label>
                     <Input 
                       id="crm"
                       value={profile.crm}
                       onChange={(e) => setProfile(prev => ({ ...prev, crm: e.target.value }))}
+                      className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="specialty">Especialidade</Label>
+                    <Label htmlFor="specialty" className="text-gray-700 font-medium">Especialidade</Label>
                     <Input 
                       id="specialty"
                       value={profile.specialty}
                       onChange={(e) => setProfile(prev => ({ ...prev, specialty: e.target.value }))}
+                      className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="birthDate">Data de Nascimento</Label>
+                    <Label htmlFor="birthDate" className="text-gray-700 font-medium">Data de Nascimento</Label>
                     <Input 
                       id="birthDate"
                       type="date"
                       value={profile.birthDate}
                       onChange={(e) => setProfile(prev => ({ ...prev, birthDate: e.target.value }))}
+                      className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="address">Endereço</Label>
+                  <Label htmlFor="address" className="text-gray-700 font-medium">Endereço</Label>
                   <Input 
                     id="address"
                     value={profile.address}
                     onChange={(e) => setProfile(prev => ({ ...prev, address: e.target.value }))}
+                    className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
                   />
                 </div>
-                <Button onClick={handleSaveProfile} disabled={isLoading}>
+                <Button 
+                  onClick={handleSaveProfile} 
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
+                >
+                  <Save className="h-4 w-4 mr-2" />
                   {isLoading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </CardContent>
@@ -330,14 +357,14 @@ const Account = () => {
 
           {/* Informações da Clínica */}
           <TabsContent value="clinic">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <Database className="h-5 w-5 text-blue-500" />
                   Dados da Clínica
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-6">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="clinicName">Nome da Clínica</Label>
@@ -407,14 +434,14 @@ const Account = () => {
 
           {/* Notificações */}
           <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <Bell className="h-5 w-5 text-blue-500" />
                   Preferências de Notificação
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 pt-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Notificações por E-mail</Label>
@@ -464,14 +491,14 @@ const Account = () => {
 
           {/* Monitoramento */}
           <TabsContent value="monitoring">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wifi className="h-5 w-5" />
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <Wifi className="h-5 w-5 text-blue-500" />
                   Parâmetros de Monitoramento
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 pt-6">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="minAdherence">Adesão Mínima (%)</Label>
@@ -530,14 +557,14 @@ const Account = () => {
           {/* Assinatura */}
           <TabsContent value="subscription">
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+                  <CardTitle className="flex items-center gap-2 text-gray-800">
+                    <CreditCard className="h-5 w-5 text-blue-500" />
                     Plano Atual
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold">MedControl Pro</h3>
@@ -551,11 +578,11 @@ const Account = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
                   <CardTitle>Planos Disponíveis</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <div className="grid gap-4 md:grid-cols-3">
                     {plans.map((plan) => (
                       <div 
@@ -599,11 +626,11 @@ const Account = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
                   <CardTitle>Histórico de Pagamentos</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span>Dezembro 2024</span>
@@ -627,17 +654,17 @@ const Account = () => {
             </div>
           </TabsContent>
 
-          {/* Segurança */}
+          {/* Segurança com confirmação de exclusão */}
           <TabsContent value="security">
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+                  <CardTitle className="flex items-center gap-2 text-gray-800">
+                    <Shield className="h-5 w-5 text-blue-500" />
                     Configurações de Segurança
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-6">
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <p className="font-medium">Senha</p>
@@ -697,11 +724,11 @@ const Account = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
                   <CardTitle>Download dos Dados (LGPD)</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <p className="text-sm text-gray-500 mb-4">
                     Baixe uma cópia de todos os seus dados em conformidade com a LGPD.
                   </p>
@@ -712,22 +739,22 @@ const Account = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
+              <Card className="shadow-lg border-red-200 bg-red-50/50 backdrop-blur-sm">
+                <CardHeader className="border-b border-red-200">
                   <CardTitle className="text-red-600">Zona de Perigo</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <p className="text-sm text-gray-500 mb-4">
                     Ações irreversíveis que afetam permanentemente sua conta.
                   </p>
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" className="w-full">
+                      <Button variant="destructive" className="w-full shadow-lg">
                         Excluir Conta Permanentemente
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="max-w-md">
                       <AlertDialogHeader>
                         <AlertDialogTitle className="text-red-600">
                           Excluir Conta Permanentemente
