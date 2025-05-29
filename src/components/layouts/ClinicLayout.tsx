@@ -1,4 +1,3 @@
-
 import { ReactNode, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, MessageSquareWarning, Settings, User, LogOut, Menu, X } from "lucide-react";
@@ -39,12 +38,7 @@ const ClinicLayout = ({ children, title }: ClinicLayoutProps) => {
       icon: <MessageSquareWarning className="h-5 w-5" />
     },
     {
-      name: "Configurações",
-      path: "/clinic/settings",
-      icon: <Settings className="h-5 w-5" />
-    },
-    {
-      name: "Conta",
+      name: "Conta & Configurações",
       path: "/clinic/account",
       icon: <User className="h-5 w-5" />
     }

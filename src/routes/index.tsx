@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,7 +28,6 @@ const ClinicDashboard = lazy(() => import('@/pages/clinic/Dashboard'));
 const ClinicPatientView = lazy(() => import('@/pages/clinic/PatientView'));
 const ClinicPatients = lazy(() => import('@/pages/clinic/Patients'));
 const ClinicAlerts = lazy(() => import('@/pages/clinic/Alerts'));
-const ClinicSettings = lazy(() => import('@/pages/clinic/Settings'));
 const ClinicAccount = lazy(() => import('@/pages/clinic/Account'));
 
 // Loading fallback
@@ -171,14 +169,6 @@ const AppRoutes = () => {
           element={
             <AuthGuard userType="clinic">
               <ClinicAlerts />
-            </AuthGuard>
-          } 
-        />
-        <Route 
-          path="/clinic/settings" 
-          element={
-            <AuthGuard userType="clinic">
-              <ClinicSettings />
             </AuthGuard>
           } 
         />
