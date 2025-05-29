@@ -47,9 +47,7 @@ const ParaClinicas = () => {
                 </div>)}
             </div>
 
-            <Button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center px-[16px] my-[51px] py-0 mx-0">
-              Criar Conta para Clínica
-            </Button>
+            <Button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center px-[16px] my-[51px] py-0 mx-0">Criar Conta para Médicos</Button>
           </div>
 
           {/* Dashboard Preview */}
