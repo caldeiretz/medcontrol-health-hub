@@ -26,6 +26,10 @@ const PatientProfile = lazy(() => import('@/pages/patient/Profile'));
 // Clinic pages
 const ClinicDashboard = lazy(() => import('@/pages/clinic/Dashboard'));
 const ClinicPatientView = lazy(() => import('@/pages/clinic/PatientView'));
+const ClinicPatients = lazy(() => import('@/pages/clinic/Patients'));
+const ClinicAlerts = lazy(() => import('@/pages/clinic/Alerts'));
+const ClinicSettings = lazy(() => import('@/pages/clinic/Settings'));
+const ClinicAccount = lazy(() => import('@/pages/clinic/Account'));
 
 // Loading fallback
 const LoadingFallback = () => (
@@ -136,6 +140,38 @@ const AppRoutes = () => {
           element={
             <AuthGuard userType="clinic">
               <ClinicDashboard />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/clinic/patients" 
+          element={
+            <AuthGuard userType="clinic">
+              <ClinicPatients />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/clinic/alerts" 
+          element={
+            <AuthGuard userType="clinic">
+              <ClinicAlerts />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/clinic/settings" 
+          element={
+            <AuthGuard userType="clinic">
+              <ClinicSettings />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/clinic/account" 
+          element={
+            <AuthGuard userType="clinic">
+              <ClinicAccount />
             </AuthGuard>
           } 
         />
