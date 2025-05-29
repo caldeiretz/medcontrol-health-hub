@@ -9,7 +9,7 @@ const CTA = () => {
   const handleClinicSignUp = () => {
     navigate('/auth/clinic-register');
   };
-  return <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-green-600">
+  return <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-green-600 py-[54px]">
       <div className="container mx-auto px-4">
         <div className="text-center space-y-8">
           <div className="space-y-6">
@@ -38,7 +38,7 @@ const CTA = () => {
           </div>
 
           {/* Trust indicators */}
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 pt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 pt-8 py-[11px]">
             <div className="flex items-center space-x-2 text-blue-100">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               <span className="text-sm">Começe grátis em 2 minutos</span>
@@ -54,14 +54,7 @@ const CTA = () => {
           </div>
 
           {/* Social proof */}
-          <div className="pt-8">
-            <p className="text-blue-200 text-sm mb-4">Já confiaram no MedControl:</p>
-            <div className="flex justify-center items-center space-x-8 opacity-60">
-              <div className="bg-white/20 px-4 py-2 rounded-lg text-white font-medium">Hospital A</div>
-              <div className="bg-white/20 px-4 py-2 rounded-lg text-white font-medium">Clínica B</div>
-              <div className="bg-white/20 px-4 py-2 rounded-lg text-white font-medium">Centro C</div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </section>;
