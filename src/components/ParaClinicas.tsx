@@ -1,6 +1,14 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Users, Shield, Clock } from 'lucide-react';
+
 const ParaClinicas = () => {
+  const navigate = useNavigate();
+
+  const handleClinicSignUp = () => {
+    navigate('/auth/clinic-register');
+  };
+
   const benefits = [{
     icon: BarChart3,
     title: "Visualização em tempo real",
@@ -18,7 +26,8 @@ const ParaClinicas = () => {
     title: "Economize tempo",
     description: "Reduza consultas desnecessárias e melhore o atendimento"
   }];
-  return <section id="para-clinicas" className="py-20 bg-gradient-to-br from-blue-50 to-white">
+  return (
+    <section id="para-clinicas" className="py-20 bg-gradient-to-br from-blue-50 to-white">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
@@ -36,7 +45,8 @@ const ParaClinicas = () => {
 
             {/* Benefits Grid */}
             <div className="grid sm:grid-cols-2 gap-6">
-              {benefits.map((benefit, index) => <div key={index} className="flex items-start space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-start space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                     <benefit.icon size={20} className="text-white" />
                   </div>
@@ -44,10 +54,16 @@ const ParaClinicas = () => {
                     <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
                     <p className="text-sm text-gray-600">{benefit.description}</p>
                   </div>
-                </div>)}
+                </div>
+              ))}
             </div>
 
-            <Button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center px-[16px] my-[51px] py-0 mx-0">Criar Conta para Médicos</Button>
+            <Button 
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center px-[16px] my-[51px] py-0 mx-0"
+              onClick={handleClinicSignUp}
+            >
+              Criar Conta para Médicos
+            </Button>
           </div>
 
           {/* Dashboard Preview */}
@@ -113,6 +129,8 @@ const ParaClinicas = () => {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default ParaClinicas;
