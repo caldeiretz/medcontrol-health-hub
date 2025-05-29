@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User, Mail, Phone, MapPin, Calendar, CreditCard, Shield, Download } from "lucide-react";
 import ClinicLayout from "@/components/layouts/ClinicLayout";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarInitials } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 
 const Account = () => {
