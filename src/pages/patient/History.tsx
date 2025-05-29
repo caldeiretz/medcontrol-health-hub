@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { CalendarIcon, Clock, Check, XCircle, HeartPulse, Activity } from "lucide-react";
+import { CalendarIcon, Clock, Check, XCircle, HeartPulse, Activity, Download } from "lucide-react";
 import PatientLayout from "@/components/layouts/PatientLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
+import { exportHistoryToPDF } from "@/utils/exportHistoryToPDF";
 
 // Mock medication history data
 const mockMedicationHistory = [
@@ -81,6 +82,7 @@ const mockVitalsHistory = [
 
 const History = () => {
   const [timeframe, setTimeframe] = useState("week");
+  const [isExporting, setIsExporting] = useState(false);
   
   // Calculate adherence percentage
   const calculateAdherence = () => {
@@ -344,8 +346,14 @@ const History = () => {
         
         {/* Export button */}
         <div className="mt-8 flex justify-center">
-          <Button variant="outline">
-            Exportar Histórico
+          <Button 
+            variant="outline" 
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isExporting ? "Exportando..." : "Exportar Histórico"}
           </Button>
         </div>
       </div>
