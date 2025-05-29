@@ -1,6 +1,14 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Heart, Smartphone, Users, Shield } from 'lucide-react';
+
 const ParaPacientes = () => {
+  const navigate = useNavigate();
+  
+  const handlePatientSignUp = () => {
+    navigate('/auth/patient-register');
+  };
+
   const benefits = [{
     icon: Smartphone,
     title: "Fácil de usar",
@@ -18,7 +26,8 @@ const ParaPacientes = () => {
     title: "Privacidade garantida",
     description: "Suas informações só são compartilhadas com seu consentimento"
   }];
-  return <section id="para-pacientes" className="py-20 bg-gradient-to-br from-green-50 to-white">
+  return (
+    <section id="para-pacientes" className="py-20 bg-gradient-to-br from-green-50 to-white">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Mobile App Preview */}
@@ -111,7 +120,8 @@ const ParaPacientes = () => {
 
             {/* Benefits List */}
             <div className="space-y-4">
-              {benefits.map((benefit, index) => <div key={index} className="flex items-start space-x-4">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-start space-x-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
                     <benefit.icon size={20} className="text-white" />
                   </div>
@@ -119,15 +129,21 @@ const ParaPacientes = () => {
                     <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
                     <p className="text-gray-600">{benefit.description}</p>
                   </div>
-                </div>)}
+                </div>
+              ))}
             </div>
 
-            <Button className="bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold text-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 text-center px-[23px] py-[17px] my-[20px] mx-0">
+            <Button 
+              className="bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold text-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 text-center px-[23px] py-[17px] my-[20px] mx-0"
+              onClick={handlePatientSignUp}
+            >
               Começar Agora - É Grátis!
             </Button>
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default ParaPacientes;
