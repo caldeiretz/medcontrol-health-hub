@@ -23,7 +23,7 @@ const PatientLayout = ({ children, title }: PatientLayoutProps) => {
   };
 
   const handleProfileClick = () => {
-    navigate('/patient/profile');
+    navigate('/patient/account');
   };
 
   const handlePhotoChange = (photoUrl: string | null) => {

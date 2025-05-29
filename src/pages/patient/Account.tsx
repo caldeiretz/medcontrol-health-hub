@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Bell, Shield, AlertTriangle } from "lucide-react";
+import { ArrowLeft, User, Bell, Shield, AlertTriangle, Info } from "lucide-react";
 import PatientLayout from "@/components/layouts/PatientLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,13 +11,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ProfilePhotoUpload from "@/components/ProfilePhotoUpload";
+import DeleteAccountModal from "./components/DeleteAccountModal";
 
 const PatientAccount = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
   // Mock user data
   const [profileData, setProfileData] = useState({
@@ -39,13 +42,15 @@ const PatientAccount = () => {
     reminderFrequency: "15" // minutes before
   });
 
-  // Privacy settings
+  // Privacy settings (removed shareWithFamily)
   const [privacySettings, setPrivacySettings] = useState({
     shareWithDoctor: true,
-    shareWithFamily: false,
     dataExport: true,
     anonymousUsage: false
   });
+
+  // Mock current plan - change this to "premium" to test SMS functionality
+  const currentPlan = "free"; // "free" | "premium" | "enterprise"
 
   const handleSaveProfile = async () => {
     setIsLoading(true);
@@ -77,17 +82,16 @@ const PatientAccount = () => {
     setIsLoading(false);
   };
 
-  const handleDeleteAccount = async () => {
-    if (window.confirm("Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.")) {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+  const handleSMSToggle = (checked: boolean) => {
+    if (currentPlan === "free" && checked) {
       toast({
-        title: "Conta excluída",
-        description: "Sua conta foi excluída com sucesso.",
+        title: "Recurso Premium",
+        description: "Notificações por SMS estão disponíveis apenas em planos pagos.",
         variant: "destructive"
       });
-      navigate('/');
+      return;
     }
+    setNotificationSettings(prev => ({ ...prev, smsNotifications: checked }));
   };
 
   const handlePhotoChange = (photoUrl: string | null) => {
@@ -229,7 +233,7 @@ const PatientAccount = () => {
             </Card>
           </TabsContent>
 
-          {/* Notifications Tab */}
+          {/* Notifications Tab - updated with SMS improvements */}
           <TabsContent value="notifications">
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
@@ -239,80 +243,98 @@ const PatientAccount = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 pt-6">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label>Lembretes de Medicação</Label>
-                      <p className="text-sm text-gray-500">Receber notificações para tomar medicamentos</p>
+                <TooltipProvider>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Lembretes de Medicação</Label>
+                        <p className="text-sm text-gray-500">Receber notificações para tomar medicamentos</p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.medicationReminders}
+                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, medicationReminders: checked }))}
+                      />
                     </div>
-                    <Switch 
-                      checked={notificationSettings.medicationReminders}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, medicationReminders: checked }))}
-                    />
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label>Antecedência do Lembrete</Label>
-                    <Select 
-                      value={notificationSettings.reminderFrequency} 
-                      onValueChange={(value) => setNotificationSettings(prev => ({ ...prev, reminderFrequency: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5">5 minutos antes</SelectItem>
-                        <SelectItem value="10">10 minutos antes</SelectItem>
-                        <SelectItem value="15">15 minutos antes</SelectItem>
-                        <SelectItem value="30">30 minutos antes</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label>Notificações por Email</Label>
-                      <p className="text-sm text-gray-500">Receber relatórios e lembretes por email</p>
+                    <div className="space-y-2">
+                      <Label>Antecedência do Lembrete</Label>
+                      <Select 
+                        value={notificationSettings.reminderFrequency} 
+                        onValueChange={(value) => setNotificationSettings(prev => ({ ...prev, reminderFrequency: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5 minutos antes</SelectItem>
+                          <SelectItem value="10">10 minutos antes</SelectItem>
+                          <SelectItem value="15">15 minutos antes</SelectItem>
+                          <SelectItem value="30">30 minutos antes</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Switch 
-                      checked={notificationSettings.emailNotifications}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, emailNotifications: checked }))}
-                    />
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label>Notificações por SMS</Label>
-                      <p className="text-sm text-gray-500">Receber lembretes críticos por SMS</p>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Notificações por Email</Label>
+                        <p className="text-sm text-gray-500">Receber relatórios e lembretes por email</p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.emailNotifications}
+                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, emailNotifications: checked }))}
+                      />
                     </div>
-                    <Switch 
-                      checked={notificationSettings.smsNotifications}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, smsNotifications: checked }))}
-                    />
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label>Alertas de Sinais Vitais</Label>
-                      <p className="text-sm text-gray-500">Notificações quando valores estão fora do normal</p>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-2">
+                          <Label>Notificações por SMS</Label>
+                          {currentPlan === "free" && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Info className="h-4 w-4 text-amber-500" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Disponível apenas em planos pagos</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          Receber lembretes críticos por SMS
+                          {currentPlan === "free" && " (Premium)"}
+                        </p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.smsNotifications}
+                        onCheckedChange={handleSMSToggle}
+                        disabled={currentPlan === "free"}
+                      />
                     </div>
-                    <Switch 
-                      checked={notificationSettings.vitalSignsAlerts}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, vitalSignsAlerts: checked }))}
-                    />
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label>Relatórios Semanais</Label>
-                      <p className="text-sm text-gray-500">Resumo semanal do seu progresso</p>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Alertas de Sinais Vitais</Label>
+                        <p className="text-sm text-gray-500">Notificações quando valores estão fora do normal</p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.vitalSignsAlerts}
+                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, vitalSignsAlerts: checked }))}
+                      />
                     </div>
-                    <Switch 
-                      checked={notificationSettings.weeklyReports}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, weeklyReports: checked }))}
-                    />
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Relatórios Semanais</Label>
+                        <p className="text-sm text-gray-500">Resumo semanal do seu progresso</p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.weeklyReports}
+                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, weeklyReports: checked }))}
+                      />
+                    </div>
                   </div>
-                </div>
+                </TooltipProvider>
 
                 <Button onClick={handleSaveNotifications} disabled={isLoading} className="bg-gradient-to-r from-blue-500 to-green-500">
                   {isLoading ? "Salvando..." : "Salvar Configurações"}
@@ -321,7 +343,7 @@ const PatientAccount = () => {
             </Card>
           </TabsContent>
 
-          {/* Privacy Tab */}
+          {/* Privacy Tab - removed shareWithFamily */}
           <TabsContent value="privacy">
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
@@ -340,17 +362,6 @@ const PatientAccount = () => {
                     <Switch 
                       checked={privacySettings.shareWithDoctor}
                       onCheckedChange={(checked) => setPrivacySettings(prev => ({ ...prev, shareWithDoctor: checked }))}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label>Compartilhar com Família</Label>
-                      <p className="text-sm text-gray-500">Permitir acesso aos contatos de emergência</p>
-                    </div>
-                    <Switch 
-                      checked={privacySettings.shareWithFamily}
-                      onCheckedChange={(checked) => setPrivacySettings(prev => ({ ...prev, shareWithFamily: checked }))}
                     />
                   </div>
 
@@ -384,7 +395,7 @@ const PatientAccount = () => {
             </Card>
           </TabsContent>
 
-          {/* Account Tab */}
+          {/* Account Tab - updated with new modal */}
           <TabsContent value="account">
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-red-50 to-orange-50 border-b border-red-100">
@@ -402,17 +413,22 @@ const PatientAccount = () => {
                   </p>
                   <Button 
                     variant="destructive" 
-                    onClick={handleDeleteAccount}
+                    onClick={() => setIsDeleteModalOpen(true)}
                     disabled={isLoading}
                     className="bg-red-600 hover:bg-red-700"
                   >
-                    {isLoading ? "Excluindo..." : "Excluir Conta Permanentemente"}
+                    Excluir Conta Permanentemente
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        <DeleteAccountModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+        />
       </div>
     </PatientLayout>
   );
