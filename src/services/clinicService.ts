@@ -152,8 +152,8 @@ export const clinicService = {
       throw medicationsError;
     }
 
-    // Get patient vitals
-    const { data: vitals, error: vitalsError } = await supabase
+    // Get patient vitals with type casting
+    const { data: vitalsData, error: vitalsError } = await supabase
       .from('vitals')
       .select('*')
       .eq('user_id', patientId)
@@ -164,10 +164,16 @@ export const clinicService = {
       throw vitalsError;
     }
 
+    // Cast vitals data to proper type
+    const vitals: Vital[] = (vitalsData || []).map(vital => ({
+      ...vital,
+      type: vital.type as 'blood_pressure' | 'weight' | 'heart_rate' | 'glucose'
+    }));
+
     return {
       patient,
       medications: medications || [],
-      vitals: vitals || []
+      vitals
     };
   },
 

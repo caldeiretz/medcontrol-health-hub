@@ -96,7 +96,7 @@ const Dashboard = () => {
           
           <VitalsCard onRegisterVitals={handleRegisterVitals} />
           
-          <ProgressCard onViewHistory={handleViewHistory} />
+          <ProgressCard />
         </div>
       </div>
     </PatientLayout>

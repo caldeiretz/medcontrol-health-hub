@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Search, Eye, Calendar, Pills, Activity } from "lucide-react";
+import { Search, Eye, Calendar, Pill, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ClinicLayout from "@/components/layouts/ClinicLayout";
 import { Button } from "@/components/ui/button";
@@ -88,7 +87,7 @@ const Patients = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                           <div className="flex items-center gap-2">
-                            <Pills className="h-4 w-4 text-blue-500" />
+                            <Pill className="h-4 w-4 text-blue-500" />
                             <span className="text-gray-600">
                               {patient.medications_count} medicações
                             </span>

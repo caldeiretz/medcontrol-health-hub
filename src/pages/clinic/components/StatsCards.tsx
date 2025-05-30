@@ -1,5 +1,4 @@
-
-import { Users, AlertTriangle, Pills, Activity } from "lucide-react";
+import { Users, AlertTriangle, Pill, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface StatsCardsProps {
@@ -30,7 +29,7 @@ const StatsCards = ({ totalPatients, activeAlerts, totalMedications, recentActiv
     {
       title: "Medicações Monitoradas",
       value: totalMedications,
-      icon: Pills,
+      icon: Pill,
       description: "Em uso pelos pacientes",
       color: "text-green-600",
       bgColor: "bg-green-50"

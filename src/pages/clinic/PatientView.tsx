@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Phone, Mail, MapPin, User, Pills, Activity } from "lucide-react";
+import { ArrowLeft, Calendar, Phone, Mail, MapPin, User, Pill, Activity } from "lucide-react";
 import ClinicLayout from "@/components/layouts/ClinicLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,7 +114,7 @@ const PatientView = () => {
 
               <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 lg:w-48">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <Pills className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                  <Pill className="h-6 w-6 text-blue-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-blue-600">{activeMedications.length}</p>
                   <p className="text-xs text-blue-600">Medicações Ativas</p>
                 </div>
@@ -174,7 +173,7 @@ const PatientView = () => {
             ) : (
               <Card>
                 <CardContent className="py-8 text-center">
-                  <Pills className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">Nenhuma medicação ativa encontrada</p>
                 </CardContent>
               </Card>
