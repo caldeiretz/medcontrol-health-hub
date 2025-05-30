@@ -9,7 +9,234 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      clinic_patients: {
+        Row: {
+          clinic_id: string
+          created_at: string | null
+          id: string
+          patient_id: string
+          status: string | null
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string | null
+          id?: string
+          patient_id: string
+          status?: string | null
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string | null
+          id?: string
+          patient_id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      clinic_profiles: {
+        Row: {
+          address: string | null
+          clinic_name: string | null
+          created_at: string | null
+          crm: string
+          id: string
+          phone: string | null
+          specialty: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          clinic_name?: string | null
+          created_at?: string | null
+          crm: string
+          id: string
+          phone?: string | null
+          specialty: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          clinic_name?: string | null
+          created_at?: string | null
+          crm?: string
+          id?: string
+          phone?: string | null
+          specialty?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      medical_history: {
+        Row: {
+          created_at: string | null
+          date: string
+          description: string
+          doctor_name: string | null
+          event_type: string
+          id: string
+          patient_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          description: string
+          doctor_name?: string | null
+          event_type: string
+          id?: string
+          patient_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          description?: string
+          doctor_name?: string | null
+          event_type?: string
+          id?: string
+          patient_id?: string
+        }
+        Relationships: []
+      }
+      medications: {
+        Row: {
+          created_at: string | null
+          dosage: string
+          end_date: string | null
+          frequency: string
+          id: string
+          instructions: string | null
+          is_active: boolean | null
+          name: string
+          patient_id: string
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dosage: string
+          end_date?: string | null
+          frequency: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean | null
+          name: string
+          patient_id: string
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dosage?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean | null
+          name?: string
+          patient_id?: string
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      patient_profiles: {
+        Row: {
+          address: string | null
+          age: number | null
+          created_at: string | null
+          emergency_contact: string | null
+          id: string
+          medical_condition: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          created_at?: string | null
+          emergency_contact?: string | null
+          id: string
+          medical_condition?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          created_at?: string | null
+          emergency_contact?: string | null
+          id?: string
+          medical_condition?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      vital_signs: {
+        Row: {
+          diastolic_pressure: number | null
+          heart_rate: number | null
+          height: number | null
+          id: string
+          notes: string | null
+          patient_id: string
+          recorded_at: string | null
+          systolic_pressure: number | null
+          temperature: number | null
+          weight: number | null
+        }
+        Insert: {
+          diastolic_pressure?: number | null
+          heart_rate?: number | null
+          height?: number | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          recorded_at?: string | null
+          systolic_pressure?: number | null
+          temperature?: number | null
+          weight?: number | null
+        }
+        Update: {
+          diastolic_pressure?: number | null
+          heart_rate?: number | null
+          height?: number | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          recorded_at?: string | null
+          systolic_pressure?: number | null
+          temperature?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +245,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "patient" | "clinic"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +360,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["patient", "clinic"],
+    },
   },
 } as const

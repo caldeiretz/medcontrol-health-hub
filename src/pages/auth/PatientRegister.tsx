@@ -70,13 +70,13 @@ const PatientRegister = () => {
         role: 'patient' as const,
       };
       
-      const success = await register(userData);
+      const result = await register(userData);
       
-      if (success) {
+      if (result.success) {
         toast.success('Cadastro realizado com sucesso');
         navigate('/patient/dashboard');
       } else {
-        toast.error('Falha no cadastro. Tente novamente.');
+        toast.error(result.error || 'Falha no cadastro. Tente novamente.');
       }
     } catch (error) {
       toast.error('Ocorreu um erro ao fazer o cadastro.');

@@ -1,10 +1,11 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { sanitizeInput, validateEmail, validatePassword } from '@/utils/security';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 type UserRole = 'patient' | 'clinic' | null;
 
-interface User {
+interface UserProfile {
   id: string;
   name: string;
   email: string;
@@ -12,11 +13,19 @@ interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<boolean>;
-  register: (userData: { name: string; email: string; password: string; role: UserRole; [key: string]: any }) => Promise<boolean>;
-  logout: () => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: { 
+    name: string; 
+    email: string; 
+    password: string; 
+    role: UserRole; 
+    [key: string]: any 
+  }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -30,163 +39,204 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    // Check if user is authenticated on component mount
-    const storedUser = sessionStorage.getItem('user');
-    const authToken = sessionStorage.getItem('authToken');
-    
-    if (storedUser && authToken) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        // Validate stored user data
-        if (parsedUser.id && parsedUser.email && parsedUser.role) {
-          setUser(parsedUser);
-          setIsAuthenticated(true);
-        } else {
-          // Clear invalid data
-          sessionStorage.removeItem('user');
-          sessionStorage.removeItem('authToken');
-          sessionStorage.removeItem('userRole');
-        }
-      } catch (error) {
-        console.error('Error parsing stored user data');
-        sessionStorage.clear();
+  // Função para buscar perfil do usuário
+  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
       }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
     }
+  };
+
+  // Configurar listener de mudanças de autenticação
+  useEffect(() => {
+    // Configurar listener de mudanças de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        
+        setSession(session);
+        
+        if (session?.user) {
+          // Buscar perfil do usuário
+          const profile = await fetchUserProfile(session.user.id);
+          if (profile) {
+            setUser(profile);
+            setIsAuthenticated(true);
+          } else {
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Verificar sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id).then((profile) => {
+          if (profile) {
+            setUser(profile);
+            setIsAuthenticated(true);
+            setSession(session);
+          }
+          setIsLoading(false);
+        });
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Enhanced login with proper validation and NO password logging
-  const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Input validation and sanitization
-      const sanitizedEmail = sanitizeInput(email);
+      setIsLoading(true);
       
-      if (!validateEmail(sanitizedEmail)) {
-        console.error('Invalid email format');
-        return false;
-      }
-
-      const passwordValidation = validatePassword(password);
-      if (!passwordValidation.isValid) {
-        console.error('Password validation failed:', passwordValidation.errors);
-        return false;
-      }
-
-      if (!role || (role !== 'patient' && role !== 'clinic')) {
-        console.error('Invalid user role');
-        return false;
-      }
-
-      // Log login attempt WITHOUT any sensitive data
-      console.log('Login attempt for email:', sanitizedEmail, 'role:', role);
-      
-      // Mock successful login with enhanced security
-      const mockUser: User = {
-        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: role === 'patient' ? 'Patient User' : 'Dr. Clinic User',
-        email: sanitizedEmail,
-        role
-      };
-      
-      // Generate a secure mock token
-      const authToken = `token_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
-      
-      // Store in sessionStorage for better security than localStorage
-      sessionStorage.setItem('authToken', authToken);
-      sessionStorage.setItem('userRole', role);
-      sessionStorage.setItem('user', JSON.stringify(mockUser));
-      
-      setUser(mockUser);
-      setIsAuthenticated(true);
-      
-      console.log('Login successful for user:', sanitizedEmail);
-      return true;
-    } catch (error) {
-      console.error('Login failed:', error instanceof Error ? error.message : 'Unknown error');
-      return false;
-    }
-  };
-
-  // Enhanced registration with proper validation
-  const register = async (userData: { name: string; email: string; password: string; role: UserRole; [key: string]: any }): Promise<boolean> => {
-    try {
-      // Input validation and sanitization
-      const sanitizedName = sanitizeInput(userData.name);
-      const sanitizedEmail = sanitizeInput(userData.email);
-
-      if (!sanitizedName || sanitizedName.length < 2) {
-        console.error('Invalid name');
-        return false;
-      }
-
-      if (!validateEmail(sanitizedEmail)) {
-        console.error('Invalid email format');
-        return false;
-      }
-
-      const passwordValidation = validatePassword(userData.password);
-      if (!passwordValidation.isValid) {
-        console.error('Password validation failed:', passwordValidation.errors);
-        return false;
-      }
-
-      if (!userData.role || (userData.role !== 'patient' && userData.role !== 'clinic')) {
-        console.error('Invalid user role');
-        return false;
-      }
-
-      // Log registration attempt WITHOUT password or sensitive data
-      console.log('Registration attempt for:', { 
-        name: sanitizedName, 
-        email: sanitizedEmail, 
-        role: userData.role 
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      
-      // Mock successful registration
-      const mockUser: User = {
-        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: sanitizedName,
-        email: sanitizedEmail,
-        role: userData.role
-      };
-      
-      // Generate a secure mock token
-      const authToken = `token_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
-      
-      // Store in sessionStorage
-      sessionStorage.setItem('authToken', authToken);
-      sessionStorage.setItem('userRole', userData.role);
-      sessionStorage.setItem('user', JSON.stringify(mockUser));
-      
-      setUser(mockUser);
-      setIsAuthenticated(true);
-      
-      console.log('Registration successful for user:', sanitizedEmail);
-      return true;
+
+      if (error) {
+        console.error('Login error:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        const profile = await fetchUserProfile(data.user.id);
+        if (profile) {
+          setUser(profile);
+          setSession(data.session);
+          setIsAuthenticated(true);
+          return { success: true };
+        } else {
+          return { success: false, error: 'Perfil de usuário não encontrado' };
+        }
+      }
+
+      return { success: false, error: 'Falha no login' };
     } catch (error) {
-      console.error('Registration failed:', error instanceof Error ? error.message : 'Unknown error');
-      return false;
+      console.error('Login error:', error);
+      return { success: false, error: 'Erro interno. Tente novamente.' };
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    // Clear all storage and state securely
-    sessionStorage.clear();
-    localStorage.removeItem('authenticated'); // Clean up any old localStorage data
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('user');
-    
-    setUser(null);
-    setIsAuthenticated(false);
-    
-    console.log('User logged out successfully');
+  const register = async (userData: { 
+    name: string; 
+    email: string; 
+    password: string; 
+    role: UserRole; 
+    [key: string]: any 
+  }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setIsLoading(true);
+      
+      // Preparar metadados baseados no role
+      const userMetadata: any = {
+        name: userData.name,
+        role: userData.role,
+      };
+
+      // Adicionar dados específicos do role
+      if (userData.role === 'patient') {
+        if (userData.age) userMetadata.age = userData.age.toString();
+        if (userData.condition) userMetadata.condition = userData.condition;
+      } else if (userData.role === 'clinic') {
+        if (userData.clinicName) userMetadata.clinicName = userData.clinicName;
+        if (userData.crm) userMetadata.crm = userData.crm;
+        if (userData.specialty) userMetadata.specialty = userData.specialty;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: userMetadata
+        }
+      });
+
+      if (error) {
+        console.error('Registration error:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        // O perfil será criado automaticamente pelo trigger
+        console.log('User registered successfully:', data.user.id);
+        
+        // Se a confirmação de email estiver desabilitada, o usuário já estará logado
+        if (data.session) {
+          const profile = await fetchUserProfile(data.user.id);
+          if (profile) {
+            setUser(profile);
+            setSession(data.session);
+            setIsAuthenticated(true);
+          }
+        }
+        
+        return { success: true };
+      }
+
+      return { success: false, error: 'Falha no cadastro' };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { success: false, error: 'Erro interno. Tente novamente.' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async (): Promise<void> => {
+    try {
+      setIsLoading(true);
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setIsAuthenticated(false);
+      console.log('User logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isAuthenticated, 
+      isLoading, 
+      login, 
+      register, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,9 +40,14 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Enhanced Auth guard with comprehensive security checks
+// Auth guard with real Supabase authentication
 const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'patient' | 'clinic' }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
+  
+  // Show loading while checking auth state
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
   
   // Primary authentication check
   if (!isAuthenticated || !user) {
@@ -55,17 +61,19 @@ const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'p
     return <Navigate to={user.role === 'patient' ? '/patient/dashboard' : '/clinic/dashboard'} replace />;
   }
   
-  // Additional security checks for valid user data
-  if (!user.id || !user.email) {
-    console.log('Access denied: Invalid user data detected');
-    return <Navigate to="/auth/profile-choice" replace />;
-  }
+  return children;
+};
 
-  // Check for valid session token
-  const authToken = sessionStorage.getItem('authToken');
-  if (!authToken) {
-    console.log('Access denied: No valid session token');
-    return <Navigate to="/auth/profile-choice" replace />;
+// Redirect authenticated users away from auth pages
+const PublicRoute = ({ children }: { children: JSX.Element }) => {
+  const { isAuthenticated, user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
+  
+  if (isAuthenticated && user) {
+    return <Navigate to={user.role === 'patient' ? '/patient/dashboard' : '/clinic/dashboard'} replace />;
   }
   
   return children;
@@ -164,11 +172,46 @@ const AppRoutes = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Index />} />
-        <Route path="/auth/profile-choice" element={<ProfileChoice />} />
-        <Route path="/auth/patient-login" element={<PatientLogin />} />
-        <Route path="/auth/patient-register" element={<PatientRegister />} />
-        <Route path="/auth/clinic-login" element={<ClinicLogin />} />
-        <Route path="/auth/clinic-register" element={<ClinicRegister />} />
+        <Route 
+          path="/auth/profile-choice" 
+          element={
+            <PublicRoute>
+              <ProfileChoice />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/auth/patient-login" 
+          element={
+            <PublicRoute>
+              <PatientLogin />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/auth/patient-register" 
+          element={
+            <PublicRoute>
+              <PatientRegister />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/auth/clinic-login" 
+          element={
+            <PublicRoute>
+              <ClinicLogin />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/auth/clinic-register" 
+          element={
+            <PublicRoute>
+              <ClinicRegister />
+            </PublicRoute>
+          } 
+        />
 
         {/* Patient protected routes */}
         <Route 

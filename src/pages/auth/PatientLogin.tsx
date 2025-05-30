@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { validatePassword, isRateLimited, clearRateLimit } from '@/utils/security';
 
 const formSchema = z.object({
   email: z
@@ -47,33 +46,17 @@ const PatientLogin = () => {
     try {
       setIsLoading(true);
       
-      // Rate limiting check
-      const identifier = `login_${values.email}`;
-      if (isRateLimited(identifier, 5, 300000)) { // 5 attempts per 5 minutes
-        toast.error('Muitas tentativas de login. Tente novamente em alguns minutos.');
-        return;
-      }
-
-      // Enhanced password validation
-      const passwordValidation = validatePassword(values.password);
-      if (!passwordValidation.isValid) {
-        toast.error('Senha não atende aos requisitos de segurança');
-        return;
-      }
-
-      const success = await login(values.email, values.password, 'patient');
+      const result = await login(values.email, values.password);
       
-      if (success) {
-        // Clear rate limiting on successful login
-        clearRateLimit(identifier);
+      if (result.success) {
         toast.success('Login realizado com sucesso');
         navigate('/patient/dashboard');
       } else {
-        toast.error('Falha no login. Verifique seus dados.');
+        toast.error(result.error || 'Falha no login. Verifique seus dados.');
       }
     } catch (error) {
       toast.error('Ocorreu um erro ao fazer login.');
-      console.error('Login error:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
