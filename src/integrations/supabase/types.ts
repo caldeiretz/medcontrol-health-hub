@@ -9,6 +9,104 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      medication_logs: {
+        Row: {
+          created_at: string
+          id: string
+          medication_id: string
+          notes: string | null
+          scheduled_time: string
+          status: string
+          taken_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medication_id: string
+          notes?: string | null
+          scheduled_time: string
+          status?: string
+          taken_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medication_id?: string
+          notes?: string | null
+          scheduled_time?: string
+          status?: string
+          taken_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_logs_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          created_at: string
+          dosage: string
+          end_date: string | null
+          frequency: string
+          id: string
+          instructions: string | null
+          is_active: boolean
+          name: string
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dosage: string
+          end_date?: string | null
+          frequency: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          name: string
+          start_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dosage?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          name?: string
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -51,12 +149,67 @@ export type Database = {
         }
         Relationships: []
       }
+      vitals: {
+        Row: {
+          created_at: string
+          diastolic: number | null
+          id: string
+          notes: string | null
+          recorded_at: string
+          systolic: number | null
+          type: string
+          unit: string | null
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          diastolic?: number | null
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          systolic?: number | null
+          type: string
+          unit?: string | null
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          diastolic?: number | null
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          systolic?: number | null
+          type?: string
+          unit?: string | null
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vitals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_medication_schedule: {
+        Args: {
+          med_id: string
+          user_id: string
+          frequency_text: string
+          start_date?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "patient" | "clinic"
