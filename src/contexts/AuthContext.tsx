@@ -157,7 +157,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Validar dados obrigatórios
       if (!userData.name || !userData.email || !userData.password || !userData.role) {
-        console.error('Missing required fields');
+        console.error('Missing required fields:', {
+          name: !!userData.name,
+          email: !!userData.email,
+          password: !!userData.password,
+          role: !!userData.role
+        });
         return { success: false, error: 'Todos os campos obrigatórios devem ser preenchidos' };
       }
 
@@ -165,25 +170,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const cleanName = userData.name.trim();
       const cleanEmail = userData.email.trim().toLowerCase();
       
-      // Preparar metadados com nomes de campos consistentes
-      const userMetadata: any = {
+      // Garantir que todos os campos sejam strings válidas
+      const userMetadata: Record<string, string> = {
         name: cleanName,
         role: userData.role,
       };
 
-      // Adicionar campos específicos por tipo de usuário
+      // Adicionar campos específicos por tipo de usuário, garantindo que sejam strings
       if (userData.role === 'patient') {
-        if (userData.age) userMetadata.age = userData.age.toString();
-        if (userData.condition) userMetadata.condition = userData.condition.trim();
+        if (userData.age && userData.age.toString().trim()) {
+          userMetadata.age = userData.age.toString().trim();
+        }
+        if (userData.condition && userData.condition.toString().trim()) {
+          userMetadata.condition = userData.condition.toString().trim();
+        }
       } else if (userData.role === 'clinic') {
-        if (userData.clinicName) userMetadata.clinicName = userData.clinicName.trim();
-        if (userData.crm) userMetadata.crm = userData.crm.trim();
-        if (userData.specialty) userMetadata.specialty = userData.specialty.trim();
+        if (userData.clinicName && userData.clinicName.toString().trim()) {
+          userMetadata.clinicName = userData.clinicName.toString().trim();
+        }
+        if (userData.crm && userData.crm.toString().trim()) {
+          userMetadata.crm = userData.crm.toString().trim();
+        }
+        if (userData.specialty && userData.specialty.toString().trim()) {
+          userMetadata.specialty = userData.specialty.toString().trim();
+        }
       }
 
-      console.log('Registration metadata:', userMetadata);
+      console.log('Registration metadata being sent:', userMetadata);
+      console.log('Email being used:', cleanEmail);
+      console.log('Password length:', userData.password.length);
       
-      console.log('Calling supabase.auth.signUp...');
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password: userData.password,
@@ -192,43 +208,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      console.log('Supabase signup response:', { 
-        user: data.user ? 'User created' : 'No user', 
-        session: data.session ? 'Session created' : 'No session',
+      console.log('Supabase signup completed');
+      console.log('Response data:', {
+        user: data.user ? { id: data.user.id, email: data.user.email } : null,
+        session: data.session ? 'Session exists' : 'No session',
         error: error ? error.message : 'No error'
       });
       
       if (error) {
-        console.error('Supabase signup error:', error);
+        console.error('Supabase signup error details:', {
+          message: error.message,
+          status: error.status,
+          details: error
+        });
         
-        // Tratamento específico de erros
+        // Tratamento específico de erros com mensagens mais claras
         if (error.message.includes('User already registered')) {
           return { success: false, error: 'Este e-mail já está cadastrado' };
         } else if (error.message.includes('Invalid email')) {
           return { success: false, error: 'E-mail inválido' };
         } else if (error.message.includes('Password')) {
           return { success: false, error: 'Senha deve ter pelo menos 6 caracteres' };
-        } else if (error.message.includes('Database error')) {
-          return { success: false, error: 'Erro no banco de dados. Verifique se todos os campos estão preenchidos corretamente.' };
+        } else if (error.message.includes('Database error') || error.message.includes('saving new user')) {
+          return { success: false, error: 'Erro no banco de dados. Tente novamente em alguns segundos.' };
         }
         
         return { success: false, error: `Erro no cadastro: ${error.message}` };
       }
 
       if (data.user) {
-        console.log('User registered successfully:', data.user.id);
-        
-        // Se o usuário foi criado mas não há sessão (confirmação de email necessária)
-        if (!data.session) {
-          return { success: true };
-        }
-        
+        console.log('User registered successfully with ID:', data.user.id);
         return { success: true };
       }
 
-      return { success: false, error: 'Falha no cadastro' };
+      console.error('No user returned from signup');
+      return { success: false, error: 'Falha no cadastro - nenhum usuário criado' };
+      
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Registration exception:', error);
       return { success: false, error: `Erro interno: ${error?.message || 'Tente novamente.'}` };
     } finally {
       setIsLoading(false);
