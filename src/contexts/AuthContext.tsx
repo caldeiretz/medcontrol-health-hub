@@ -48,19 +48,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Fetching user profile for:', userId);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
+      // Como não temos tabela profiles ainda, vamos criar um perfil temporário baseado nos metadados do usuário
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (authUser) {
+        const profile: UserProfile = {
+          id: authUser.id,
+          name: authUser.user_metadata?.name || authUser.email || 'Usuário',
+          email: authUser.email || '',
+          role: authUser.user_metadata?.role || 'patient'
+        };
+        
+        console.log('User profile created from metadata:', profile);
+        return profile;
       }
 
-      console.log('User profile fetched successfully:', data);
-      return data;
+      return null;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
@@ -155,22 +158,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       console.log('Starting registration for:', userData.email, 'as role:', userData.role);
       
-      // Verificar se os serviços estão disponíveis
-      console.log('Checking Supabase connection...');
-      const { error: healthError } = await supabase.from('profiles').select('count').limit(1);
-      if (healthError) {
-        console.error('Supabase connection error:', healthError);
-        return { success: false, error: 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.' };
-      }
-      console.log('Supabase connection OK');
-      
       // Validar dados obrigatórios
       if (!userData.name || !userData.email || !userData.password || !userData.role) {
         console.error('Missing required fields');
         return { success: false, error: 'Todos os campos obrigatórios devem ser preenchidos' };
       }
 
-      // Preparar metadados mais simples
+      // Preparar metadados
       const userMetadata = {
         name: userData.name.trim(),
         role: userData.role,
@@ -196,8 +190,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         console.error('Supabase signup error:', error);
-        console.error('Error code:', error.status);
-        console.error('Error message:', error.message);
         
         // Tratamento específico de erros
         if (error.message.includes('User already registered')) {
@@ -206,10 +198,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return { success: false, error: 'E-mail inválido' };
         } else if (error.message.includes('Password')) {
           return { success: false, error: 'Senha deve ter pelo menos 6 caracteres' };
-        } else if (error.message.includes('Database error') || error.status === 500) {
-          return { success: false, error: 'Erro no servidor. O serviço está temporariamente indisponível.' };
-        } else if (error.message.includes('type "user_role" does not exist')) {
-          return { success: false, error: 'Erro de configuração do banco de dados. Entre em contato com o suporte.' };
         }
         
         return { success: false, error: `Erro no cadastro: ${error.message}` };

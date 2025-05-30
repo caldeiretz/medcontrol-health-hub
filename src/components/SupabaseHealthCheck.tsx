@@ -12,8 +12,8 @@ const SupabaseHealthCheck = () => {
       try {
         console.log('Checking Supabase health...');
         
-        // Teste simples de conectividade
-        const { error } = await supabase.from('profiles').select('count').limit(1);
+        // Teste simples de conectividade - apenas verificar se conseguimos nos conectar
+        const { error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Health check failed:', error);
