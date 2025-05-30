@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Função para buscar perfil do usuário
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       console.log('Fetching user profile for:', userId);
@@ -60,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return null;
       }
 
-      console.log('User profile fetched:', data);
+      console.log('User profile fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -68,11 +67,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Configurar listener de mudanças de autenticação
   useEffect(() => {
     console.log('Setting up auth state listener');
     
-    // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
@@ -80,28 +77,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         
         if (session?.user) {
-          // Aguardar um pouco para garantir que o trigger foi executado
-          setTimeout(async () => {
-            const profile = await fetchUserProfile(session.user.id);
-            if (profile) {
-              setUser(profile);
-              setIsAuthenticated(true);
-            } else {
-              console.warn('Profile not found for user:', session.user.id);
-              setUser(null);
-              setIsAuthenticated(false);
-            }
-            setIsLoading(false);
-          }, 1500);
+          const profile = await fetchUserProfile(session.user.id);
+          if (profile) {
+            setUser(profile);
+            setIsAuthenticated(true);
+          } else {
+            console.warn('Profile not found for user:', session.user.id);
+            setUser(null);
+            setIsAuthenticated(false);
+          }
         } else {
           setUser(null);
           setIsAuthenticated(false);
-          setIsLoading(false);
         }
+        
+        setIsLoading(false);
       }
     );
 
-    // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.id);
       
@@ -137,17 +130,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, error: error.message };
       }
 
-      if (data.user) {
-        // Aguardar um pouco para garantir que tudo está sincronizado
-        setTimeout(async () => {
-          const profile = await fetchUserProfile(data.user.id);
-          if (profile) {
-            setUser(profile);
-            setSession(data.session);
-            setIsAuthenticated(true);
-          }
-        }, 500);
-        
+      if (data.user && data.session) {
+        console.log('Login successful for user:', data.user.id);
         return { success: true };
       }
 
@@ -171,23 +155,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       console.log('Attempting registration for:', userData.email, 'as', userData.role);
       
-      // Preparar os dados do usuário
+      // Preparar os metadados baseados no role
       const userMetadata: any = {
         name: userData.name,
         role: userData.role,
       };
 
-      // Adicionar dados específicos baseados no role
+      // Adicionar dados específicos do paciente
       if (userData.role === 'patient') {
-        if (userData.age) userMetadata.age = userData.age.toString();
-        if (userData.condition) userMetadata.condition = userData.condition;
-      } else if (userData.role === 'clinic') {
-        if (userData.clinicName) userMetadata.clinicName = userData.clinicName;
-        if (userData.crm) userMetadata.crm = userData.crm;
-        if (userData.specialty) userMetadata.specialty = userData.specialty;
+        if (userData.age) {
+          userMetadata.age = userData.age.toString();
+        }
+        if (userData.condition) {
+          userMetadata.condition = userData.condition;
+        }
+      } 
+      // Adicionar dados específicos da clínica
+      else if (userData.role === 'clinic') {
+        if (userData.clinicName) {
+          userMetadata.clinicName = userData.clinicName;
+        }
+        if (userData.crm) {
+          userMetadata.crm = userData.crm;
+        }
+        if (userData.specialty) {
+          userMetadata.specialty = userData.specialty;
+        }
       }
 
-      console.log('User metadata for registration:', userMetadata);
+      console.log('User metadata prepared:', userMetadata);
       
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
@@ -200,13 +196,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Registration error:', error);
         
-        // Mensagens de erro mais específicas
         if (error.message.includes('User already registered')) {
           return { success: false, error: 'Este e-mail já está cadastrado' };
         } else if (error.message.includes('Database error')) {
-          return { success: false, error: 'Erro no banco de dados. Aguarde alguns segundos e tente novamente.' };
-        } else if (error.message.includes('Invalid input')) {
-          return { success: false, error: 'Dados inválidos. Verifique os campos obrigatórios.' };
+          return { success: false, error: 'Erro no banco de dados. Tente novamente em alguns segundos.' };
         }
         
         return { success: false, error: error.message };
@@ -214,13 +207,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (data.user) {
         console.log('User registered successfully:', data.user.id);
-        
-        // Se a confirmação de email estiver desabilitada, o usuário já estará logado
-        if (data.session) {
-          console.log('User session created, waiting for profile creation...');
-          // O AuthStateChange listener irá cuidar do resto
-        }
-        
         return { success: true };
       }
 
