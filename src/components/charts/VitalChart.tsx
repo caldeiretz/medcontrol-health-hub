@@ -1,127 +1,146 @@
 
-import { useState } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import ChartFilters from "./ChartFilters";
-import PressureChart from "./PressureChart";
-import SingleLineChart from "./SingleLineChart";
+import { Vital } from '@/services/vitalsService';
 
 interface VitalChartProps {
-  title: string;
-  type: "pressure" | "glucose" | "heart-rate";
-  data: any[];
-  showFilters?: boolean;
-  onExport?: () => void;
+  vitals: Vital[];
 }
 
-const VitalChart = ({ title, type, data, showFilters = true, onExport }: VitalChartProps) => {
-  const [currentPeriod, setCurrentPeriod] = useState("7d");
-
-  const getTrendData = () => {
-    if (data.length < 2) return { trend: "stable", percentage: 0 };
-    
-    let currentValue, previousValue;
-    
-    if (type === "pressure") {
-      currentValue = data[data.length - 1].systolic;
-      previousValue = data[data.length - 2].systolic;
-    } else if (type === "glucose") {
-      currentValue = data[data.length - 1].glucose;
-      previousValue = data[data.length - 2].glucose;
-    } else {
-      currentValue = data[data.length - 1].value;
-      previousValue = data[data.length - 2].value;
+const VitalChart = ({ vitals }: VitalChartProps) => {
+  // Group vitals by type
+  const vitalsByType = vitals.reduce((acc, vital) => {
+    if (!acc[vital.type]) {
+      acc[vital.type] = [];
     }
+    acc[vital.type].push(vital);
+    return acc;
+  }, {} as Record<string, Vital[]>);
 
-    const percentage = Math.abs(((currentValue - previousValue) / previousValue) * 100);
-    const trend = currentValue > previousValue ? "up" : currentValue < previousValue ? "down" : "stable";
-    
-    return { trend, percentage: Math.round(percentage * 10) / 10 };
+  const formatChartData = (vitalsOfType: Vital[], type: string) => {
+    return vitalsOfType
+      .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+      .map(vital => ({
+        date: new Date(vital.recorded_at).toLocaleDateString('pt-BR'),
+        time: new Date(vital.recorded_at).toLocaleTimeString('pt-BR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        ...(type === 'blood_pressure' ? {
+          sistolica: vital.systolic,
+          diastolica: vital.diastolic
+        } : {
+          valor: vital.value
+        }),
+        notes: vital.notes
+      }));
   };
 
-  const { trend, percentage } = getTrendData();
-
-  const getTrendIcon = () => {
-    switch (trend) {
-      case "up":
-        return <TrendingUp className="h-4 w-4 text-red-500" />;
-      case "down":
-        return <TrendingDown className="h-4 w-4 text-green-500" />;
-      default:
-        return <Minus className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getTrendText = () => {
-    if (trend === "stable") return "Estável";
-    return `${percentage}% ${trend === "up" ? "↑" : "↓"}`;
-  };
-
-  const renderChart = () => {
+  const getVitalName = (type: string) => {
     switch (type) {
-      case "pressure":
-        return <PressureChart data={data} />;
-      case "glucose":
-        const glucoseData = data.map(item => ({ date: item.date, value: item.glucose }));
-        return (
-          <SingleLineChart
-            data={glucoseData}
-            dataKey="glucose"
-            label="Glicemia"
-            color="#10b981"
-            unit="mg/dL"
-            normalRange={{ min: 70, max: 126 }}
-            referenceLines={[
-              { value: 100, label: "Meta", color: "#166534" }
-            ]}
-          />
-        );
-      case "heart-rate":
-        return (
-          <SingleLineChart
-            data={data}
-            dataKey="heartRate"
-            label="Batimentos"
-            color="#8b5cf6"
-            unit="bpm"
-            normalRange={{ min: 60, max: 100 }}
-          />
-        );
+      case 'blood_pressure':
+        return 'Pressão Arterial';
+      case 'heart_rate':
+        return 'Frequência Cardíaca';
+      case 'glucose':
+        return 'Glicose';
+      case 'weight':
+        return 'Peso';
       default:
-        return null;
+        return type;
     }
   };
+
+  const getUnit = (type: string) => {
+    switch (type) {
+      case 'blood_pressure':
+        return 'mmHg';
+      case 'heart_rate':
+        return 'bpm';
+      case 'glucose':
+        return 'mg/dL';
+      case 'weight':
+        return 'kg';
+      default:
+        return '';
+    }
+  };
+
+  if (vitals.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center">
+          <p className="text-gray-500">Nenhum dado disponível para gráficos</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-800">{title}</CardTitle>
-          <div className="flex items-center gap-2 text-sm">
-            {getTrendIcon()}
-            <span className={`font-medium ${
-              trend === "up" ? "text-red-600" : 
-              trend === "down" ? "text-green-600" : 
-              "text-gray-600"
-            }`}>
-              {getTrendText()}
-            </span>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {showFilters && (
-          <ChartFilters
-            currentPeriod={currentPeriod}
-            onPeriodChange={setCurrentPeriod}
-            onExport={onExport}
-          />
-        )}
-        <div className="mt-4">
-          {renderChart()}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      {Object.entries(vitalsByType).map(([type, typeVitals]) => {
+        if (typeVitals.length < 2) return null; // Need at least 2 points for a chart
+
+        const chartData = formatChartData(typeVitals, type);
+        
+        return (
+          <Card key={type}>
+            <CardHeader>
+              <CardTitle className="text-lg">
+                {getVitalName(type)} {getUnit(type) && `(${getUnit(type)})`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    labelFormatter={(value) => `Data: ${value}`}
+                    formatter={(value, name) => [value, name]}
+                  />
+                  <Legend />
+                  
+                  {type === 'blood_pressure' ? (
+                    <>
+                      <Line
+                        type="monotone"
+                        dataKey="sistolica"
+                        stroke="#ef4444"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        name="Sistólica"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="diastolica"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        name="Diastólica"
+                      />
+                    </>
+                  ) : (
+                    <Line
+                      type="monotone"
+                      dataKey="valor"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      name={getVitalName(type)}
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
   );
 };
 

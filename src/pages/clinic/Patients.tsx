@@ -1,193 +1,164 @@
 
 import { useState } from "react";
-import { Search, Filter, Eye, Plus } from "lucide-react";
-import ClinicLayout from "@/components/layouts/ClinicLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { mockPatients } from "./components/mockData";
+import { Search, Eye, Calendar, Pills, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ClinicLayout from "@/components/layouts/ClinicLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useSharedPatients } from "@/hooks/useClinic";
 
 const Patients = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterAdesao, setFilterAdesao] = useState("all");
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const { patients, isLoading } = useSharedPatients();
 
-  const getAdherenceColor = (percentage: number) => {
-    if (percentage >= 90) return "text-green-600 bg-green-100";
-    if (percentage >= 70) return "text-yellow-600 bg-yellow-100";
-    return "text-red-600 bg-red-100";
+  const handleViewPatient = (patientId: string) => {
+    navigate(`/clinic/patients/${patientId}`);
   };
 
-  const getStatusBadge = (alerts: number) => {
-    if (alerts === 0) return <Badge className="bg-green-100 text-green-800">Estável</Badge>;
-    if (alerts === 1) return <Badge className="bg-yellow-100 text-yellow-800">Atenção</Badge>;
-    return <Badge className="bg-red-100 text-red-800">Crítico</Badge>;
-  };
+  const filteredPatients = patients.filter(patient =>
+    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const filteredPatients = mockPatients.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         patient.condition.toLowerCase().includes(searchQuery.toLowerCase());
+  const getActivityStatus = (lastActivity: string) => {
+    const now = new Date();
+    const activityTime = new Date(lastActivity);
+    const diffInHours = (now.getTime() - activityTime.getTime()) / (1000 * 60 * 60);
     
-    const matchesStatus = filterStatus === "all" || 
-                         (filterStatus === "stable" && patient.alerts === 0) ||
-                         (filterStatus === "attention" && patient.alerts === 1) ||
-                         (filterStatus === "critical" && patient.alerts > 1);
-    
-    const matchesAdesao = filterAdesao === "all" ||
-                         (filterAdesao === "high" && patient.adherence >= 90) ||
-                         (filterAdesao === "medium" && patient.adherence >= 70 && patient.adherence < 90) ||
-                         (filterAdesao === "low" && patient.adherence < 70);
-    
-    return matchesSearch && matchesStatus && matchesAdesao;
-  });
+    if (diffInHours < 24) return { status: 'Ativo', color: 'bg-green-100 text-green-800' };
+    if (diffInHours < 72) return { status: 'Moderado', color: 'bg-yellow-100 text-yellow-800' };
+    return { status: 'Inativo', color: 'bg-red-100 text-red-800' };
+  };
 
   return (
-    <ClinicLayout title="Gerenciar Pacientes">
+    <ClinicLayout title="Pacientes">
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total de Pacientes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockPatients.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Estáveis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {mockPatients.filter(p => p.alerts === 0).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Necessitam Atenção</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                {mockPatients.filter(p => p.alerts === 1).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Críticos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {mockPatients.filter(p => p.alerts > 1).length}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Meus Pacientes</h1>
+            <p className="text-gray-600 mt-1">
+              Pacientes que compartilham dados com você
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar pacientes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full sm:w-64"
+              />
+            </div>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <CardTitle>Lista de Pacientes</CardTitle>
-              <Button className="md:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Paciente
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4 md:flex-row md:items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  placeholder="Buscar por nome ou condição..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Status</SelectItem>
-                    <SelectItem value="stable">Estável</SelectItem>
-                    <SelectItem value="attention">Atenção</SelectItem>
-                    <SelectItem value="critical">Crítico</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterAdesao} onValueChange={setFilterAdesao}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Adesão" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toda Adesão</SelectItem>
-                    <SelectItem value="high">Alta (≥90%)</SelectItem>
-                    <SelectItem value="medium">Média (70-89%)</SelectItem>
-                    <SelectItem value="low">Baixa (&lt;70%)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Paciente</TableHead>
-                  <TableHead>Idade</TableHead>
-                  <TableHead>Condição</TableHead>
-                  <TableHead>Adesão</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Última Atualização</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPatients.map((patient) => (
-                  <TableRow key={patient.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                          <span className="font-medium text-gray-600">{patient.avatar}</span>
+        {isLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Carregando pacientes...</p>
+          </div>
+        ) : filteredPatients.length > 0 ? (
+          <div className="grid gap-4">
+            {filteredPatients.map((patient) => {
+              const activity = getActivityStatus(patient.last_activity);
+              
+              return (
+                <Card key={patient.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 truncate">
+                              {patient.name}
+                            </h3>
+                            <p className="text-sm text-gray-600">{patient.email}</p>
+                            {patient.age && (
+                              <p className="text-sm text-gray-500">{patient.age} anos</p>
+                            )}
+                          </div>
+                          <Badge className={activity.color}>
+                            {activity.status}
+                          </Badge>
                         </div>
-                        <span className="font-medium">{patient.name}</span>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Pills className="h-4 w-4 text-blue-500" />
+                            <span className="text-gray-600">
+                              {patient.medications_count} medicações
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-green-500" />
+                            <span className="text-gray-600">
+                              {patient.vitals_count} sinais vitais
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-purple-500" />
+                            <span className="text-gray-600">
+                              Desde {new Date(patient.shared_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                        </div>
+
+                        {patient.condition && (
+                          <div className="mt-3">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {patient.condition}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell>{patient.age} anos</TableCell>
-                    <TableCell className="max-w-xs truncate">{patient.condition}</TableCell>
-                    <TableCell>
-                      <Badge className={getAdherenceColor(patient.adherence)}>
-                        {patient.adherence}%
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(patient.alerts)}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{patient.lastUpdate}</TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => navigate(`/clinic/patient/${patient.id}`)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right text-sm text-gray-500">
+                          <p>Última atividade:</p>
+                          <p className="font-medium">
+                            {new Date(patient.last_activity).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        
+                        <Button
+                          onClick={() => handleViewPatient(patient.id)}
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver Detalhes
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-16 text-center">
+              <div className="text-gray-400 mb-4">
+                <Search className="h-12 w-12 mx-auto" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente compartilhando dados'}
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto">
+                {searchTerm 
+                  ? 'Tente ajustar os termos de busca para encontrar o paciente desejado.'
+                  : 'Quando os pacientes compartilharem seus dados com você, eles aparecerão aqui.'
+                }
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </ClinicLayout>
   );
