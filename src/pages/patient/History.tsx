@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { CalendarIcon, Clock, Check, XCircle, HeartPulse, Activity, Download } from "lucide-react";
 import PatientLayout from "@/components/layouts/PatientLayout";
@@ -16,90 +17,85 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTodayMedicationLogs } from "@/hooks/useMedications";
+import { useVitals } from "@/hooks/useVitals";
 import { toast } from "@/hooks/use-toast";
 import { exportHistoryToPDF } from "@/utils/exportHistoryToPDF";
-
-// Mock medication history data
-const mockMedicationHistory = [
-  {
-    date: "23/05/2023",
-    medications: [
-      { id: 1, name: "Losartana", dosage: "50mg", time: "08:00", taken: true },
-      { id: 2, name: "Losartana", dosage: "50mg", time: "20:00", taken: true },
-      { id: 3, name: "AAS", dosage: "100mg", time: "22:00", taken: true },
-    ]
-  },
-  {
-    date: "22/05/2023",
-    medications: [
-      { id: 4, name: "Losartana", dosage: "50mg", time: "08:00", taken: true },
-      { id: 5, name: "Losartana", dosage: "50mg", time: "20:00", taken: true },
-      { id: 6, name: "AAS", dosage: "100mg", time: "22:00", taken: false, skipped: true },
-    ]
-  },
-  {
-    date: "21/05/2023",
-    medications: [
-      { id: 7, name: "Losartana", dosage: "50mg", time: "08:00", taken: true },
-      { id: 8, name: "Losartana", dosage: "50mg", time: "20:00", taken: false },
-      { id: 9, name: "AAS", dosage: "100mg", time: "22:00", taken: true },
-    ]
-  },
-  {
-    date: "20/05/2023",
-    medications: [
-      { id: 10, name: "Losartana", dosage: "50mg", time: "08:00", taken: true },
-      { id: 11, name: "Losartana", dosage: "50mg", time: "20:00", taken: true },
-      { id: 12, name: "AAS", dosage: "100mg", time: "22:00", taken: true },
-    ]
-  },
-];
-
-// Mock vitals history data
-const mockVitalsHistory = [
-  {
-    date: "23/05/2023",
-    vitals: [
-      { id: 1, type: "blood-pressure", value: "120/80", time: "09:15", status: "normal" },
-      { id: 2, type: "glucose", value: "95", time: "09:20", status: "normal" },
-    ]
-  },
-  {
-    date: "21/05/2023",
-    vitals: [
-      { id: 3, type: "blood-pressure", value: "130/85", time: "08:30", status: "normal" },
-      { id: 4, type: "heart-rate", value: "72", time: "08:35", status: "normal" },
-    ]
-  },
-  {
-    date: "19/05/2023",
-    vitals: [
-      { id: 5, type: "blood-pressure", value: "145/90", time: "10:00", status: "elevated" },
-      { id: 6, type: "glucose", value: "130", time: "10:05", status: "elevated" },
-    ]
-  },
-];
+import { format, parseISO, isAfter, subDays, subMonths } from "date-fns";
 
 const History = () => {
   const [timeframe, setTimeframe] = useState("week");
   const [isExporting, setIsExporting] = useState(false);
   
+  const { logs } = useTodayMedicationLogs();
+  const { vitals } = useVitals();
+
+  // Filter data based on timeframe
+  const getFilteredData = () => {
+    const now = new Date();
+    let cutoffDate: Date;
+
+    switch (timeframe) {
+      case "week":
+        cutoffDate = subDays(now, 7);
+        break;
+      case "month":
+        cutoffDate = subMonths(now, 1);
+        break;
+      case "3months":
+        cutoffDate = subMonths(now, 3);
+        break;
+      default:
+        cutoffDate = subDays(now, 7);
+    }
+
+    const filteredLogs = logs.filter(log => 
+      isAfter(parseISO(log.scheduled_time), cutoffDate)
+    );
+
+    const filteredVitals = vitals.filter(vital => 
+      isAfter(parseISO(vital.recorded_at), cutoffDate)
+    );
+
+    return { filteredLogs, filteredVitals };
+  };
+
+  const { filteredLogs, filteredVitals } = getFilteredData();
+
+  // Group logs by date
+  const groupedLogs = filteredLogs.reduce((acc, log) => {
+    const date = format(parseISO(log.scheduled_time), 'dd/MM/yyyy');
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(log);
+    return acc;
+  }, {} as Record<string, typeof filteredLogs>);
+
+  // Group vitals by date
+  const groupedVitals = filteredVitals.reduce((acc, vital) => {
+    const date = format(parseISO(vital.recorded_at), 'dd/MM/yyyy');
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(vital);
+    return acc;
+  }, {} as Record<string, typeof filteredVitals>);
+
   // Calculate adherence percentage
   const calculateAdherence = () => {
-    const allMeds = mockMedicationHistory.flatMap(day => day.medications);
-    const totalMeds = allMeds.length;
-    const takenMeds = allMeds.filter(med => med.taken).length;
-    
-    return Math.round((takenMeds / totalMeds) * 100);
+    if (filteredLogs.length === 0) return 0;
+    const takenMeds = filteredLogs.filter(log => log.status === 'taken').length;
+    return Math.round((takenMeds / filteredLogs.length) * 100);
   };
   
   const adherencePercentage = calculateAdherence();
   
   // Get adherence color based on percentage
   const getAdherenceColor = (percentage: number) => {
-    if (percentage >= 90) return "bg-green-500";
-    if (percentage >= 70) return "bg-yellow-500";
-    return "bg-red-500";
+    if (percentage >= 90) return "text-green-500";
+    if (percentage >= 70) return "text-yellow-500";
+    return "text-red-500";
   };
   
   const adherenceColor = getAdherenceColor(adherencePercentage);
@@ -107,54 +103,32 @@ const History = () => {
   // Get vital icon based on type
   const getVitalIcon = (type: string) => {
     switch (type) {
-      case "blood-pressure":
+      case "blood_pressure":
         return <HeartPulse className="h-4 w-4 text-red-500" />;
       case "glucose":
         return <Activity className="h-4 w-4 text-green-500" />;
-      case "heart-rate":
+      case "heart_rate":
         return <HeartPulse className="h-4 w-4 text-purple-500" />;
+      case "weight":
+        return <Activity className="h-4 w-4 text-blue-500" />;
       default:
         return <Activity className="h-4 w-4" />;
     }
   };
   
   // Get vital text based on type
-  const getVitalText = (type: string, value: string) => {
-    switch (type) {
-      case "blood-pressure":
-        return `Pressão Arterial: ${value} mmHg`;
+  const getVitalText = (vital: any) => {
+    switch (vital.type) {
+      case "blood_pressure":
+        return `Pressão Arterial: ${vital.systolic}/${vital.diastolic} mmHg`;
       case "glucose":
-        return `Glicemia: ${value} mg/dL`;
-      case "heart-rate":
-        return `Batimentos: ${value} BPM`;
+        return `Glicemia: ${vital.value} mg/dL`;
+      case "heart_rate":
+        return `Batimentos: ${vital.value} BPM`;
+      case "weight":
+        return `Peso: ${vital.value} kg`;
       default:
-        return value;
-    }
-  };
-  
-  // Get status badge based on status
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "normal":
-        return (
-          <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
-            Normal
-          </span>
-        );
-      case "elevated":
-        return (
-          <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
-            Elevado
-          </span>
-        );
-      case "low":
-        return (
-          <span className="inline-flex items-center rounded-full bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
-            Baixo
-          </span>
-        );
-      default:
-        return null;
+        return `${vital.type}: ${vital.value}`;
     }
   };
 
@@ -162,10 +136,35 @@ const History = () => {
     try {
       setIsExporting(true);
       
-      // Call the export function with the current data
+      // Convert data to the format expected by exportHistoryToPDF
+      const medicationHistory = Object.entries(groupedLogs).map(([date, logs]) => ({
+        date,
+        medications: logs.map(log => ({
+          id: parseInt(log.id.slice(-8), 16),
+          name: log.medication?.name || 'Medicação',
+          dosage: log.medication?.dosage || '',
+          time: format(parseISO(log.scheduled_time), 'HH:mm'),
+          taken: log.status === 'taken',
+          skipped: log.status === 'skipped'
+        }))
+      }));
+
+      const vitalsHistory = Object.entries(groupedVitals).map(([date, vitals]) => ({
+        date,
+        vitals: vitals.map(vital => ({
+          id: parseInt(vital.id.slice(-8), 16),
+          type: vital.type.replace('_', '-'),
+          value: vital.type === 'blood_pressure' 
+            ? `${vital.systolic}/${vital.diastolic}` 
+            : vital.value?.toString() || '',
+          time: format(parseISO(vital.recorded_at), 'HH:mm'),
+          status: 'normal' // Default status since we don't have this data
+        }))
+      }));
+      
       await exportHistoryToPDF(
-        mockMedicationHistory,
-        mockVitalsHistory,
+        medicationHistory,
+        vitalsHistory,
         adherencePercentage,
         timeframe
       );
@@ -286,89 +285,108 @@ const History = () => {
           </TabsList>
           
           <TabsContent value="medications" className="space-y-6">
-            {mockMedicationHistory.map((day) => (
-              <Card key={day.date}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4" />
-                    {day.date}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="divide-y">
-                    {day.medications.map((med) => (
-                      <li key={med.id} className="py-3 first:pt-0 last:pb-0">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{med.name} {med.dosage}</p>
-                            <div className="flex items-center mt-1">
-                              <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
-                              <span className="text-sm text-gray-600">{med.time}</span>
-                            </div>
-                          </div>
-                          <div>
-                            {med.taken ? (
-                              <div className="flex items-center gap-1 text-green-600">
-                                <Check className="h-5 w-5" />
-                                <span className="text-sm font-medium">Tomado</span>
-                              </div>
-                            ) : med.skipped ? (
-                              <div className="flex items-center gap-1 text-yellow-600">
-                                <XCircle className="h-5 w-5" />
-                                <span className="text-sm font-medium">Ignorado</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-red-600">
-                                <XCircle className="h-5 w-5" />
-                                <span className="text-sm font-medium">Não tomado</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+            {Object.entries(groupedLogs).length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-gray-500">Nenhuma medicação registrada no período selecionado.</p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              Object.entries(groupedLogs).map(([date, logs]) => (
+                <Card key={date}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <CalendarIcon className="h-4 w-4" />
+                      {date}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="divide-y">
+                      {logs.map((log) => (
+                        <li key={log.id} className="py-3 first:pt-0 last:pb-0">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="font-medium">
+                                {log.medication?.name} {log.medication?.dosage}
+                              </p>
+                              <div className="flex items-center mt-1">
+                                <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
+                                <span className="text-sm text-gray-600">
+                                  {format(parseISO(log.scheduled_time), 'HH:mm')}
+                                </span>
+                              </div>
+                            </div>
+                            <div>
+                              {log.status === 'taken' ? (
+                                <div className="flex items-center gap-1 text-green-600">
+                                  <Check className="h-5 w-5" />
+                                  <span className="text-sm font-medium">Tomado</span>
+                                </div>
+                              ) : log.status === 'skipped' ? (
+                                <div className="flex items-center gap-1 text-yellow-600">
+                                  <XCircle className="h-5 w-5" />
+                                  <span className="text-sm font-medium">Ignorado</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-red-600">
+                                  <XCircle className="h-5 w-5" />
+                                  <span className="text-sm font-medium">Não tomado</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
           
           <TabsContent value="vitals" className="space-y-6">
-            {mockVitalsHistory.map((day) => (
-              <Card key={day.date}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4" />
-                    {day.date}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="divide-y">
-                    {day.vitals.map((vital) => (
-                      <li key={vital.id} className="py-3 first:pt-0 last:pb-0">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              {getVitalIcon(vital.type)}
-                              <p className="font-medium">
-                                {getVitalText(vital.type, vital.value)}
-                              </p>
-                            </div>
-                            <div className="flex items-center mt-1">
-                              <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
-                              <span className="text-sm text-gray-600">{vital.time}</span>
-                            </div>
-                          </div>
-                          <div>
-                            {getStatusBadge(vital.status)}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+            {Object.entries(groupedVitals).length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-gray-500">Nenhum sinal vital registrado no período selecionado.</p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              Object.entries(groupedVitals).map(([date, vitals]) => (
+                <Card key={date}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <CalendarIcon className="h-4 w-4" />
+                      {date}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="divide-y">
+                      {vitals.map((vital) => (
+                        <li key={vital.id} className="py-3 first:pt-0 last:pb-0">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                {getVitalIcon(vital.type)}
+                                <p className="font-medium">
+                                  {getVitalText(vital)}
+                                </p>
+                              </div>
+                              <div className="flex items-center mt-1">
+                                <Clock className="h-3.5 w-3.5 text-gray-400 mr-1" />
+                                <span className="text-sm text-gray-600">
+                                  {format(parseISO(vital.recorded_at), 'HH:mm')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
         </Tabs>
         

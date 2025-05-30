@@ -1,61 +1,57 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import PatientLayout from "@/components/layouts/PatientLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useMedications } from "@/hooks/useMedications";
+import { Medication } from "@/services/medicationService";
 import { toast } from "sonner";
-
-// Mock data - in real app would fetch from API
-const mockMedications = [
-  { 
-    id: 1, 
-    name: "Losartana", 
-    dosage: "50mg", 
-    frequency: "12/12h",
-    times: ["08:00", "20:00"],
-    instructions: "Tomar com água, preferencialmente com o estômago vazio"
-  },
-  { 
-    id: 2, 
-    name: "Enalapril", 
-    dosage: "10mg", 
-    frequency: "1x ao dia",
-    times: ["09:00"],
-    instructions: "Tomar pela manhã com água"
-  },
-  // ... more mock data
-];
 
 const EditMedication = () => {
   const { medicationId } = useParams();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { medications, updateMedication, isUpdating } = useMedications();
+  const [isLoading, setIsLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     name: "",
     dosage: "",
     frequency: "",
-    times: [""],
-    instructions: ""
+    instructions: "",
+    start_date: "",
+    end_date: ""
   });
 
+  const medication = medications.find(med => med.id === medicationId);
+
   useEffect(() => {
-    // Load medication data
-    const medication = mockMedications.find(med => med.id === parseInt(medicationId || "0"));
     if (medication) {
       setFormData({
         name: medication.name,
         dosage: medication.dosage,
         frequency: medication.frequency,
-        times: medication.times,
-        instructions: medication.instructions || ""
+        instructions: medication.instructions || "",
+        start_date: medication.start_date,
+        end_date: medication.end_date || ""
       });
+      setIsLoading(false);
+    } else if (medications.length > 0) {
+      // If medications are loaded but medication not found
+      toast.error("Medicação não encontrada");
+      navigate('/patient/medications');
     }
-  }, [medicationId]);
+  }, [medication, medications, medicationId, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -64,38 +60,36 @@ const EditMedication = () => {
     }));
   };
 
-  const handleTimeChange = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      times: prev.times.map((time, i) => i === index ? value : time)
-    }));
-  };
-
-  const addTimeSlot = () => {
-    setFormData(prev => ({
-      ...prev,
-      times: [...prev.times, ""]
-    }));
-  };
-
-  const removeTimeSlot = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      times: prev.times.filter((_, i) => i !== index)
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    if (!medicationId) {
+      toast.error("ID da medicação não encontrado");
+      return;
+    }
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const updates: Partial<Medication> = {
+      name: formData.name,
+      dosage: formData.dosage,
+      frequency: formData.frequency,
+      instructions: formData.instructions || null,
+      start_date: formData.start_date,
+      end_date: formData.end_date || null,
+    };
 
-    toast.success("Medicação atualizada com sucesso!");
-    setIsLoading(false);
+    updateMedication({ id: medicationId, updates });
     navigate('/patient/medications');
   };
+
+  if (isLoading) {
+    return (
+      <PatientLayout title="Editar Medicação">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </PatientLayout>
+    );
+  }
 
   return (
     <PatientLayout title="Editar Medicação">
@@ -140,44 +134,45 @@ const EditMedication = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="frequency">Frequência</Label>
-                <Input
-                  id="frequency"
+                <Select 
                   value={formData.frequency}
-                  onChange={(e) => handleInputChange('frequency', e.target.value)}
-                  placeholder="Ex: 12/12h, 1x ao dia"
-                  required
-                />
+                  onValueChange={(value) => handleInputChange('frequency', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a frequência" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1x ao dia">1 vez ao dia</SelectItem>
+                    <SelectItem value="12/12h">A cada 12 horas (2x ao dia)</SelectItem>
+                    <SelectItem value="8/8h">A cada 8 horas (3x ao dia)</SelectItem>
+                    <SelectItem value="6/6h">A cada 6 horas (4x ao dia)</SelectItem>
+                    <SelectItem value="1x por semana">1 vez por semana</SelectItem>
+                    <SelectItem value="S.O.S.">Somente quando necessário (S.O.S.)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Horários</Label>
-                {formData.times.map((time, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      type="time"
-                      value={time}
-                      onChange={(e) => handleTimeChange(index, e.target.value)}
-                      required
-                    />
-                    {formData.times.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => removeTimeSlot(index)}
-                      >
-                        Remover
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addTimeSlot}
-                  className="w-full"
-                >
-                  Adicionar Horário
-                </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="start_date">Data de Início</Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => handleInputChange('start_date', e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="end_date">Data de Fim (opcional)</Label>
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => handleInputChange('end_date', e.target.value)}
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -201,11 +196,14 @@ const EditMedication = () => {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isUpdating}
                   className="flex-1 gap-2"
                 >
-                  {isLoading ? (
-                    "Salvando..."
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
                   ) : (
                     <>
                       <Save className="h-4 w-4" />
