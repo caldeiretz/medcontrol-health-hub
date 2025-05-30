@@ -152,59 +152,82 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }): Promise<{ success: boolean; error?: string }> => {
     try {
       setIsLoading(true);
-      console.log('Attempting registration for:', userData.email, 'as', userData.role);
+      console.log('=== STARTING REGISTRATION PROCESS ===');
+      console.log('Registration attempt for:', userData.email, 'as role:', userData.role);
+      console.log('Full userData received:', userData);
       
-      // Preparar os metadados de forma mais simples
+      // Validar dados obrigatórios
+      if (!userData.name || !userData.email || !userData.password || !userData.role) {
+        console.error('Missing required fields:', {
+          name: !!userData.name,
+          email: !!userData.email,
+          password: !!userData.password,
+          role: !!userData.role
+        });
+        return { success: false, error: 'Todos os campos obrigatórios devem ser preenchidos' };
+      }
+
+      // Preparar metadados exatamente como esperado pelo trigger
       const userMetadata: any = {
-        name: userData.name,
+        name: userData.name.trim(),
         role: userData.role,
       };
 
-      // Adicionar dados específicos baseados no role
+      // Adicionar campos específicos por role
       if (userData.role === 'patient') {
         if (userData.age) {
-          userMetadata.age = userData.age.toString();
+          const ageNum = parseInt(userData.age.toString());
+          if (!isNaN(ageNum) && ageNum > 0) {
+            userMetadata.age = ageNum.toString();
+            console.log('Added patient age:', userMetadata.age);
+          }
         }
-        if (userData.condition) {
-          userMetadata.condition = userData.condition;
+        if (userData.condition && userData.condition.trim()) {
+          userMetadata.condition = userData.condition.trim();
+          console.log('Added patient condition:', userMetadata.condition);
         }
       } else if (userData.role === 'clinic') {
-        if (userData.clinicName) {
-          userMetadata.clinicName = userData.clinicName;
+        if (userData.clinicName && userData.clinicName.trim()) {
+          userMetadata.clinicName = userData.clinicName.trim();
+          console.log('Added clinic name:', userMetadata.clinicName);
         }
-        if (userData.crm) {
-          userMetadata.crm = userData.crm;
+        if (userData.crm && userData.crm.trim()) {
+          userMetadata.crm = userData.crm.trim();
+          console.log('Added CRM:', userMetadata.crm);
         }
-        if (userData.specialty) {
-          userMetadata.specialty = userData.specialty;
+        if (userData.specialty && userData.specialty.trim()) {
+          userMetadata.specialty = userData.specialty.trim();
+          console.log('Added specialty:', userMetadata.specialty);
         }
       }
 
-      console.log('User metadata being sent:', userMetadata);
+      console.log('=== FINAL METADATA TO SEND ===');
+      console.log(JSON.stringify(userMetadata, null, 2));
       
+      console.log('=== CALLING SUPABASE SIGNUP ===');
       const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
+        email: userData.email.trim(),
         password: userData.password,
         options: {
           data: userMetadata
         }
       });
 
-      console.log('Supabase response data:', data);
-      console.log('Supabase response error:', error);
-
+      console.log('=== SUPABASE RESPONSE ===');
+      console.log('Response data:', JSON.stringify(data, null, 2));
+      
       if (error) {
-        console.error('Registration error details:', {
-          message: error.message,
-          status: error.status,
-          code: error.code || 'no_code'
-        });
+        console.error('=== SUPABASE ERROR DETAILS ===');
+        console.error('Error object:', error);
+        console.error('Error message:', error.message);
+        console.error('Error status:', error.status);
+        console.error('Error code:', error.code);
         
-        // Tratar diferentes tipos de erro
+        // Tratar erros específicos com mensagens em português
         if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
           return { success: false, error: 'Este e-mail já está cadastrado' };
         } else if (error.message.includes('Database error') || error.status === 500) {
-          return { success: false, error: 'Erro no banco de dados. Verifique se todos os campos foram preenchidos corretamente.' };
+          return { success: false, error: 'Erro no banco de dados. Tente novamente ou contate o suporte.' };
         } else if (error.message.includes('Invalid email')) {
           return { success: false, error: 'E-mail inválido' };
         } else if (error.message.includes('Password')) {
@@ -215,19 +238,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user) {
-        console.log('User registered successfully:', data.user.id);
+        console.log('=== REGISTRATION SUCCESS ===');
+        console.log('User registered with ID:', data.user.id);
+        console.log('User email confirmed:', data.user.email_confirmed_at !== null);
         
-        // Aguardar um pouco para o trigger processar
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Aguardar processamento do trigger
+        console.log('Waiting for database trigger to process...');
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         return { success: true };
       }
 
+      console.error('=== UNEXPECTED: NO USER DATA RETURNED ===');
       return { success: false, error: 'Falha no cadastro - dados não retornados' };
     } catch (error: any) {
-      console.error('Registration catch error:', error);
-      return { success: false, error: `Erro interno: ${error.message || 'Tente novamente.'}` };
+      console.error('=== REGISTRATION CATCH ERROR ===');
+      console.error('Catch error:', error);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
+      return { success: false, error: `Erro interno: ${error?.message || 'Tente novamente.'}` };
     } finally {
+      console.log('=== REGISTRATION PROCESS COMPLETED ===');
       setIsLoading(false);
     }
   };
