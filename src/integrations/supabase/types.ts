@@ -9,7 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          age: number | null
+          clinic_name: string | null
+          condition: string | null
+          created_at: string
+          crm: string | null
+          email: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          specialty: string | null
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          clinic_name?: string | null
+          condition?: string | null
+          created_at?: string
+          crm?: string | null
+          email: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          specialty?: string | null
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          clinic_name?: string | null
+          condition?: string | null
+          created_at?: string
+          crm?: string | null
+          email?: string
+          id?: string
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          specialty?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +59,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "patient" | "clinic"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +174,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["patient", "clinic"],
+    },
   },
 } as const

@@ -48,22 +48,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Fetching user profile for:', userId);
       
-      // Como não temos tabela profiles ainda, vamos criar um perfil temporário baseado nos metadados do usuário
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
-      if (authUser) {
-        const profile: UserProfile = {
-          id: authUser.id,
-          name: authUser.user_metadata?.name || authUser.email || 'Usuário',
-          email: authUser.email || '',
-          role: authUser.user_metadata?.role || 'patient'
-        };
-        
-        console.log('User profile created from metadata:', profile);
-        return profile;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
       }
 
-      return null;
+      console.log('User profile fetched successfully:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
