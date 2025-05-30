@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -154,57 +155,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       console.log('=== STARTING REGISTRATION PROCESS ===');
       console.log('Registration attempt for:', userData.email, 'as role:', userData.role);
-      console.log('Full userData received:', userData);
       
       // Validar dados obrigatórios
       if (!userData.name || !userData.email || !userData.password || !userData.role) {
-        console.error('Missing required fields:', {
-          name: !!userData.name,
-          email: !!userData.email,
-          password: !!userData.password,
-          role: !!userData.role
-        });
+        console.error('Missing required fields');
         return { success: false, error: 'Todos os campos obrigatórios devem ser preenchidos' };
       }
 
-      // Preparar metadados exatamente como esperado pelo trigger
+      // Preparar metadados de forma mais simples
       const userMetadata: any = {
         name: userData.name.trim(),
         role: userData.role,
       };
 
-      // Adicionar campos específicos por role
+      // Adicionar campos específicos apenas se existirem
       if (userData.role === 'patient') {
         if (userData.age) {
-          const ageNum = parseInt(userData.age.toString());
-          if (!isNaN(ageNum) && ageNum > 0) {
-            userMetadata.age = ageNum.toString();
-            console.log('Added patient age:', userMetadata.age);
-          }
+          userMetadata.age = userData.age.toString();
         }
-        if (userData.condition && userData.condition.trim()) {
+        if (userData.condition) {
           userMetadata.condition = userData.condition.trim();
-          console.log('Added patient condition:', userMetadata.condition);
         }
       } else if (userData.role === 'clinic') {
-        if (userData.clinicName && userData.clinicName.trim()) {
+        if (userData.clinicName) {
           userMetadata.clinicName = userData.clinicName.trim();
-          console.log('Added clinic name:', userMetadata.clinicName);
         }
-        if (userData.crm && userData.crm.trim()) {
+        if (userData.crm) {
           userMetadata.crm = userData.crm.trim();
-          console.log('Added CRM:', userMetadata.crm);
         }
-        if (userData.specialty && userData.specialty.trim()) {
+        if (userData.specialty) {
           userMetadata.specialty = userData.specialty.trim();
-          console.log('Added specialty:', userMetadata.specialty);
         }
       }
 
-      console.log('=== FINAL METADATA TO SEND ===');
-      console.log(JSON.stringify(userMetadata, null, 2));
+      console.log('Final metadata:', userMetadata);
       
-      console.log('=== CALLING SUPABASE SIGNUP ===');
       const { data, error } = await supabase.auth.signUp({
         email: userData.email.trim(),
         password: userData.password,
@@ -213,21 +198,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      console.log('=== SUPABASE RESPONSE ===');
-      console.log('Response data:', JSON.stringify(data, null, 2));
+      console.log('Supabase response:', { data, error });
       
       if (error) {
-        console.error('=== SUPABASE ERROR DETAILS ===');
-        console.error('Error object:', error);
-        console.error('Error message:', error.message);
-        console.error('Error status:', error.status);
-        console.error('Error code:', error.code);
+        console.error('Supabase error:', error);
         
-        // Tratar erros específicos com mensagens em português
-        if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
+        // Tratar erros específicos
+        if (error.message.includes('User already registered')) {
           return { success: false, error: 'Este e-mail já está cadastrado' };
-        } else if (error.message.includes('Database error') || error.status === 500) {
-          return { success: false, error: 'Erro no banco de dados. Tente novamente ou contate o suporte.' };
         } else if (error.message.includes('Invalid email')) {
           return { success: false, error: 'E-mail inválido' };
         } else if (error.message.includes('Password')) {
@@ -238,27 +216,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user) {
-        console.log('=== REGISTRATION SUCCESS ===');
-        console.log('User registered with ID:', data.user.id);
-        console.log('User email confirmed:', data.user.email_confirmed_at !== null);
+        console.log('User registered successfully:', data.user.id);
         
-        // Aguardar processamento do trigger
-        console.log('Waiting for database trigger to process...');
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Aguardar um pouco para o trigger processar
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         return { success: true };
       }
 
-      console.error('=== UNEXPECTED: NO USER DATA RETURNED ===');
-      return { success: false, error: 'Falha no cadastro - dados não retornados' };
+      return { success: false, error: 'Falha no cadastro' };
     } catch (error: any) {
-      console.error('=== REGISTRATION CATCH ERROR ===');
-      console.error('Catch error:', error);
-      console.error('Error message:', error?.message);
-      console.error('Error stack:', error?.stack);
+      console.error('Registration error:', error);
       return { success: false, error: `Erro interno: ${error?.message || 'Tente novamente.'}` };
     } finally {
-      console.log('=== REGISTRATION PROCESS COMPLETED ===');
       setIsLoading(false);
     }
   };

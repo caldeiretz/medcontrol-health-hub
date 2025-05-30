@@ -38,30 +38,30 @@ export type Database = {
           address: string | null
           clinic_name: string | null
           created_at: string | null
-          crm: string
+          crm: string | null
           id: string
           phone: string | null
-          specialty: string
+          specialty: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
           clinic_name?: string | null
           created_at?: string | null
-          crm: string
+          crm?: string | null
           id: string
           phone?: string | null
-          specialty: string
+          specialty?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
           clinic_name?: string | null
           created_at?: string | null
-          crm?: string
+          crm?: string | null
           id?: string
           phone?: string | null
-          specialty?: string
+          specialty?: string | null
           updated_at?: string | null
         }
         Relationships: []
