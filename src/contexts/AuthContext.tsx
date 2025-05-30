@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -155,13 +154,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       console.log('Attempting registration for:', userData.email, 'as', userData.role);
       
-      // Preparar os metadados baseados no role
+      // Preparar os metadados de forma mais simples
       const userMetadata: any = {
         name: userData.name,
         role: userData.role,
       };
 
-      // Adicionar dados específicos do paciente
+      // Adicionar dados específicos baseados no role
       if (userData.role === 'patient') {
         if (userData.age) {
           userMetadata.age = userData.age.toString();
@@ -169,9 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (userData.condition) {
           userMetadata.condition = userData.condition;
         }
-      } 
-      // Adicionar dados específicos da clínica
-      else if (userData.role === 'clinic') {
+      } else if (userData.role === 'clinic') {
         if (userData.clinicName) {
           userMetadata.clinicName = userData.clinicName;
         }
@@ -183,7 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      console.log('User metadata prepared:', userMetadata);
+      console.log('User metadata being sent:', userMetadata);
       
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
@@ -193,27 +190,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
+      console.log('Supabase response data:', data);
+      console.log('Supabase response error:', error);
+
       if (error) {
-        console.error('Registration error:', error);
+        console.error('Registration error details:', {
+          message: error.message,
+          status: error.status,
+          code: error.code || 'no_code'
+        });
         
-        if (error.message.includes('User already registered')) {
+        // Tratar diferentes tipos de erro
+        if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
           return { success: false, error: 'Este e-mail já está cadastrado' };
-        } else if (error.message.includes('Database error')) {
-          return { success: false, error: 'Erro no banco de dados. Tente novamente em alguns segundos.' };
+        } else if (error.message.includes('Database error') || error.status === 500) {
+          return { success: false, error: 'Erro no banco de dados. Verifique se todos os campos foram preenchidos corretamente.' };
+        } else if (error.message.includes('Invalid email')) {
+          return { success: false, error: 'E-mail inválido' };
+        } else if (error.message.includes('Password')) {
+          return { success: false, error: 'Senha deve ter pelo menos 6 caracteres' };
         }
         
-        return { success: false, error: error.message };
+        return { success: false, error: `Erro no cadastro: ${error.message}` };
       }
 
       if (data.user) {
         console.log('User registered successfully:', data.user.id);
+        
+        // Aguardar um pouco para o trigger processar
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         return { success: true };
       }
 
-      return { success: false, error: 'Falha no cadastro' };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, error: 'Erro interno. Tente novamente.' };
+      return { success: false, error: 'Falha no cadastro - dados não retornados' };
+    } catch (error: any) {
+      console.error('Registration catch error:', error);
+      return { success: false, error: `Erro interno: ${error.message || 'Tente novamente.'}` };
     } finally {
       setIsLoading(false);
     }
