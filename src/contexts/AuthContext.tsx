@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -44,7 +43,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  const createBasicProfile = async (userId: string, email: string): Promise<UserProfile | null> => {
+    try {
+      console.log('Creating basic profile for user:', userId);
+      
+      // Criar um perfil básico padrão
+      const basicProfile = {
+        id: userId,
+        name: email.split('@')[0] || 'Usuário',
+        email: email,
+        role: 'patient' as UserRole
+      };
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([basicProfile])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating basic profile:', error);
+        return null;
+      }
+
+      console.log('Basic profile created successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Exception creating basic profile:', error);
+      return null;
+    }
+  };
+
+  const fetchUserProfile = async (userId: string, userEmail: string): Promise<UserProfile | null> => {
     try {
       console.log('Fetching user profile for:', userId);
       
@@ -56,6 +86,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error fetching user profile:', error);
+        
+        // Se o perfil não existe, tentar criar um básico
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating basic profile...');
+          return await createBasicProfile(userId, userEmail);
+        }
+        
         return null;
       }
 
@@ -77,12 +114,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         
         if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
+          const profile = await fetchUserProfile(session.user.id, session.user.email || '');
           if (profile) {
             setUser(profile);
             setIsAuthenticated(true);
+            console.log('User authenticated with profile:', profile.role);
           } else {
-            console.warn('Profile not found for user:', session.user.id);
+            console.warn('Could not create or fetch profile for user:', session.user.id);
             setUser(null);
             setIsAuthenticated(false);
           }
@@ -99,11 +137,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Initial session check:', session?.user?.id);
       
       if (session?.user) {
-        fetchUserProfile(session.user.id).then((profile) => {
+        fetchUserProfile(session.user.id, session.user.email || '').then((profile) => {
           if (profile) {
             setUser(profile);
             setIsAuthenticated(true);
             setSession(session);
+            console.log('Initial user authenticated with profile:', profile.role);
           }
           setIsLoading(false);
         });

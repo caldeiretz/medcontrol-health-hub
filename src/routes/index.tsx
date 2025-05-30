@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,9 +39,11 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Auth guard with real Supabase authentication
+// Auth guard with improved authentication handling
 const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'patient' | 'clinic' }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
+  
+  console.log('AuthGuard check:', { isAuthenticated, userRole: user?.role, requiredType: userType, isLoading });
   
   // Show loading while checking auth state
   if (isLoading) {
@@ -51,16 +52,17 @@ const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'p
   
   // Primary authentication check
   if (!isAuthenticated || !user) {
-    console.log('Access denied: User not authenticated');
+    console.log('Access denied: User not authenticated, redirecting to profile choice');
     return <Navigate to="/auth/profile-choice" replace />;
   }
   
   // Validate user role matches required type
   if (user.role !== userType) {
-    console.log(`Access denied: User role ${user.role} does not match required ${userType}`);
+    console.log(`Access denied: User role ${user.role} does not match required ${userType}, redirecting to correct dashboard`);
     return <Navigate to={user.role === 'patient' ? '/patient/dashboard' : '/clinic/dashboard'} replace />;
   }
   
+  console.log('Access granted for user:', user.id, 'with role:', user.role);
   return children;
 };
 
@@ -68,11 +70,14 @@ const AuthGuard = ({ children, userType }: { children: JSX.Element, userType: 'p
 const PublicRoute = ({ children }: { children: JSX.Element }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
   
+  console.log('PublicRoute check:', { isAuthenticated, userRole: user?.role, isLoading });
+  
   if (isLoading) {
     return <LoadingFallback />;
   }
   
   if (isAuthenticated && user) {
+    console.log('User already authenticated, redirecting to dashboard:', user.role);
     return <Navigate to={user.role === 'patient' ? '/patient/dashboard' : '/clinic/dashboard'} replace />;
   }
   

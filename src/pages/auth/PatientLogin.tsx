@@ -45,18 +45,24 @@ const PatientLogin = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
+      console.log('Patient login attempt for:', values.email);
       
       const result = await login(values.email, values.password);
       
       if (result.success) {
+        console.log('Patient login successful, navigating to dashboard');
         toast.success('Login realizado com sucesso');
-        navigate('/patient/dashboard');
+        // Pequeno delay para garantir que o contexto seja atualizado
+        setTimeout(() => {
+          navigate('/patient/dashboard');
+        }, 100);
       } else {
+        console.error('Patient login failed:', result.error);
         toast.error(result.error || 'Falha no login. Verifique seus dados.');
       }
     } catch (error) {
+      console.error('Patient login error:', error);
       toast.error('Ocorreu um erro ao fazer login.');
-      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
