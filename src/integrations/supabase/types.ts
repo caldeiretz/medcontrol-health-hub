@@ -57,6 +57,35 @@ export type Database = {
           },
         ]
       }
+      medication_times: {
+        Row: {
+          created_at: string | null
+          id: string
+          medication_id: string | null
+          time_of_day: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          medication_id?: string | null
+          time_of_day: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          medication_id?: string | null
+          time_of_day?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_times_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medications: {
         Row: {
           created_at: string
@@ -107,43 +136,118 @@ export type Database = {
           },
         ]
       }
+      patient_doctor_sharing: {
+        Row: {
+          created_at: string | null
+          doctor_id: string | null
+          id: string
+          is_active: boolean | null
+          patient_id: string | null
+          shared_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          doctor_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          patient_id?: string | null
+          shared_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          doctor_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          patient_id?: string | null
+          shared_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_doctor_sharing_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_doctor_sharing_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          address: string | null
           age: number | null
+          birth_date: string | null
           clinic_name: string | null
           condition: string | null
           created_at: string
           crm: string | null
+          data_sharing_enabled: boolean | null
+          doctor_code: string | null
           email: string
+          email_notifications: boolean | null
+          emergency_contact: string | null
+          emergency_phone: string | null
           id: string
           name: string
+          notifications_enabled: boolean | null
+          phone: string | null
+          profile_visibility: string | null
           role: Database["public"]["Enums"]["user_role"]
+          sms_notifications: boolean | null
           specialty: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           age?: number | null
+          birth_date?: string | null
           clinic_name?: string | null
           condition?: string | null
           created_at?: string
           crm?: string | null
+          data_sharing_enabled?: boolean | null
+          doctor_code?: string | null
           email: string
+          email_notifications?: boolean | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           id: string
           name: string
+          notifications_enabled?: boolean | null
+          phone?: string | null
+          profile_visibility?: string | null
           role: Database["public"]["Enums"]["user_role"]
+          sms_notifications?: boolean | null
           specialty?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           age?: number | null
+          birth_date?: string | null
           clinic_name?: string | null
           condition?: string | null
           created_at?: string
           crm?: string | null
+          data_sharing_enabled?: boolean | null
+          doctor_code?: string | null
           email?: string
+          email_notifications?: boolean | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           id?: string
           name?: string
+          notifications_enabled?: boolean | null
+          phone?: string | null
+          profile_visibility?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          sms_notifications?: boolean | null
           specialty?: string | null
           updated_at?: string
         }
@@ -209,6 +313,20 @@ export type Database = {
           start_date?: string
         }
         Returns: undefined
+      }
+      create_medication_schedule_with_times: {
+        Args: {
+          med_id: string
+          user_id: string
+          frequency_text: string
+          custom_times?: string[]
+          start_date?: string
+        }
+        Returns: undefined
+      }
+      generate_doctor_code: {
+        Args: { crm_number: string; clinic_name: string }
+        Returns: string
       }
     }
     Enums: {

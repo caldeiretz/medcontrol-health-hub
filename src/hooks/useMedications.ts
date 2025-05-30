@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { medicationService, Medication, MedicationLog } from '@/services/medicationService';
@@ -13,7 +12,8 @@ export const useMedications = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: medicationService.createMedication,
+    mutationFn: ({ medication, customTimes }: { medication: Omit<Medication, 'id' | 'user_id' | 'created_at' | 'updated_at'>; customTimes?: string[] }) =>
+      medicationService.createMedication(medication, customTimes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medications'] });
       queryClient.invalidateQueries({ queryKey: ['medication-logs'] });
@@ -26,10 +26,11 @@ export const useMedications = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Medication> }) =>
-      medicationService.updateMedication(id, updates),
+    mutationFn: ({ id, updates, customTimes }: { id: string; updates: Partial<Medication>; customTimes?: string[] }) =>
+      medicationService.updateMedication(id, updates, customTimes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medications'] });
+      queryClient.invalidateQueries({ queryKey: ['medication-logs'] });
       toast.success('Medicação atualizada com sucesso!');
     },
     onError: (error) => {
@@ -51,6 +52,14 @@ export const useMedications = () => {
     },
   });
 
+  const getMedicationTimesQuery = (medicationId: string) => {
+    return useQuery({
+      queryKey: ['medication-times', medicationId],
+      queryFn: () => medicationService.getMedicationTimes(medicationId),
+      enabled: !!medicationId
+    });
+  };
+
   return {
     medications,
     isLoading,
@@ -61,6 +70,7 @@ export const useMedications = () => {
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    getMedicationTimes: getMedicationTimesQuery
   };
 };
 

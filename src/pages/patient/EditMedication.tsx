@@ -17,12 +17,14 @@ import {
 import { useMedications } from "@/hooks/useMedications";
 import { Medication } from "@/services/medicationService";
 import { toast } from "sonner";
+import MedicationTimesPicker from "@/components/MedicationTimesPicker";
 
 const EditMedication = () => {
   const { medicationId } = useParams();
   const navigate = useNavigate();
-  const { medications, updateMedication, isUpdating } = useMedications();
+  const { medications, updateMedication, isUpdating, getMedicationTimes } = useMedications();
   const [isLoading, setIsLoading] = useState(true);
+  const [customTimes, setCustomTimes] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -34,6 +36,7 @@ const EditMedication = () => {
   });
 
   const medication = medications.find(med => med.id === medicationId);
+  const { data: existingTimes = [] } = getMedicationTimes(medicationId || "");
 
   useEffect(() => {
     if (medication) {
@@ -45,13 +48,13 @@ const EditMedication = () => {
         start_date: medication.start_date,
         end_date: medication.end_date || ""
       });
+      setCustomTimes(existingTimes);
       setIsLoading(false);
     } else if (medications.length > 0) {
-      // If medications are loaded but medication not found
       toast.error("Medicação não encontrada");
       navigate('/patient/medications');
     }
-  }, [medication, medications, medicationId, navigate]);
+  }, [medication, medications, medicationId, navigate, existingTimes]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -77,7 +80,11 @@ const EditMedication = () => {
       end_date: formData.end_date || null,
     };
 
-    updateMedication({ id: medicationId, updates });
+    updateMedication({ 
+      id: medicationId, 
+      updates,
+      customTimes: customTimes.length > 0 ? customTimes : undefined
+    });
     navigate('/patient/medications');
   };
 
@@ -93,7 +100,7 @@ const EditMedication = () => {
 
   return (
     <PatientLayout title="Editar Medicação">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto space-y-6">
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -151,6 +158,14 @@ const EditMedication = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {formData.frequency && formData.frequency !== "S.O.S." && (
+                <MedicationTimesPicker
+                  frequency={formData.frequency}
+                  customTimes={customTimes}
+                  onCustomTimesChange={setCustomTimes}
+                />
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">

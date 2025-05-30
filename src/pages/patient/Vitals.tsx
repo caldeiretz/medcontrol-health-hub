@@ -1,321 +1,399 @@
-
 import { useState } from "react";
-import { Plus, Activity, Heart, Droplets, Weight } from "lucide-react";
+import { Heart, Droplets, Scale, Activity, Plus, Edit, Trash2, Calendar } from "lucide-react";
 import PatientLayout from "@/components/layouts/PatientLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVitals } from "@/hooks/useVitals";
-import VitalChart from "@/components/charts/VitalChart";
-import { format, parseISO } from "date-fns";
+import { Vital } from "@/services/vitalsService";
 
 const Vitals = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [vitalType, setVitalType] = useState<'blood_pressure' | 'weight' | 'heart_rate' | 'glucose'>('blood_pressure');
+  const { vitals, createVital, updateVital, deleteVital, isLoading } = useVitals();
+  const [editingVital, setEditingVital] = useState<Vital | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
-    systolic: '',
-    diastolic: '',
-    value: '',
-    notes: '',
-    recorded_at: new Date().toISOString().slice(0, 16)
+    type: "" as Vital['type'],
+    systolic: "",
+    diastolic: "",
+    value: "",
+    unit: "",
+    notes: "",
+    recorded_at: new Date().toISOString().split('T')[0]
   });
-
-  const { vitals, createVital, isCreating } = useVitals(50);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const vitalData: any = {
-      type: vitalType,
-      notes: formData.notes || null,
-      recorded_at: formData.recorded_at
-    };
-
-    if (vitalType === 'blood_pressure') {
-      vitalData.systolic = parseInt(formData.systolic);
-      vitalData.diastolic = parseInt(formData.diastolic);
-    } else {
-      vitalData.value = parseFloat(formData.value);
-      vitalData.unit = getUnit(vitalType);
-    }
-
-    createVital(vitalData);
-    setIsDialogOpen(false);
-    resetForm();
-  };
 
   const resetForm = () => {
     setFormData({
-      systolic: '',
-      diastolic: '',
-      value: '',
-      notes: '',
-      recorded_at: new Date().toISOString().slice(0, 16)
+      type: "" as Vital['type'],
+      systolic: "",
+      diastolic: "",
+      value: "",
+      unit: "",
+      notes: "",
+      recorded_at: new Date().toISOString().split('T')[0]
     });
   };
 
-  const getUnit = (type: string) => {
-    switch (type) {
-      case 'glucose':
-        return 'mg/dL';
-      case 'heart_rate':
-        return 'bpm';
-      case 'weight':
-        return 'kg';
-      default:
-        return null;
+  const handleEdit = (vital: Vital) => {
+    setEditingVital(vital);
+    setFormData({
+      type: vital.type,
+      systolic: vital.systolic?.toString() || "",
+      diastolic: vital.diastolic?.toString() || "",
+      value: vital.value?.toString() || "",
+      unit: vital.unit || "",
+      notes: vital.notes || "",
+      recorded_at: vital.recorded_at.split('T')[0]
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSubmit = () => {
+    const vitalData = {
+      type: formData.type,
+      systolic: formData.type === 'blood_pressure' && formData.systolic ? parseInt(formData.systolic) : undefined,
+      diastolic: formData.type === 'blood_pressure' && formData.diastolic ? parseInt(formData.diastolic) : undefined,
+      value: formData.type !== 'blood_pressure' && formData.value ? parseFloat(formData.value) : undefined,
+      unit: formData.unit || undefined,
+      notes: formData.notes || undefined,
+      recorded_at: new Date(formData.recorded_at).toISOString()
+    };
+
+    if (editingVital) {
+      updateVital({ id: editingVital.id, updates: vitalData });
+      setIsEditDialogOpen(false);
+      setEditingVital(null);
+    } else {
+      createVital(vitalData);
+      setIsAddDialogOpen(false);
+    }
+    
+    resetForm();
+  };
+
+  const handleDelete = (id: string) => {
+    deleteVital(id);
+    setDeleteConfirmation(null);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      resetForm();
+      setEditingVital(null);
     }
   };
 
   const getVitalIcon = (type: string) => {
     switch (type) {
-      case 'blood_pressure':
-        return <Heart className="h-5 w-5 text-red-500" />;
-      case 'glucose':
-        return <Droplets className="h-5 w-5 text-blue-500" />;
-      case 'heart_rate':
-        return <Activity className="h-5 w-5 text-green-500" />;
-      case 'weight':
-        return <Weight className="h-5 w-5 text-purple-500" />;
-      default:
-        return <Activity className="h-5 w-5" />;
+      case 'blood_pressure': return <Heart className="h-5 w-5" />;
+      case 'glucose': return <Droplets className="h-5 w-5" />;
+      case 'weight': return <Scale className="h-5 w-5" />;
+      case 'heart_rate': return <Activity className="h-5 w-5" />;
+      default: return <Activity className="h-5 w-5" />;
     }
   };
 
-  const getVitalValue = (vital: any) => {
+  const getVitalLabel = (type: string) => {
+    switch (type) {
+      case 'blood_pressure': return 'Pressão Arterial';
+      case 'glucose': return 'Glicose';
+      case 'weight': return 'Peso';
+      case 'heart_rate': return 'Frequência Cardíaca';
+      default: return type;
+    }
+  };
+
+  const formatVitalValue = (vital: Vital) => {
     if (vital.type === 'blood_pressure') {
       return `${vital.systolic}/${vital.diastolic} mmHg`;
     }
     return `${vital.value} ${vital.unit || ''}`;
   };
 
-  // Prepare chart data
-  const chartData = vitals.map(vital => ({
-    date: format(parseISO(vital.recorded_at), 'dd/MM'),
-    systolic: vital.systolic,
-    diastolic: vital.diastolic,
-    glucose: vital.type === 'glucose' ? vital.value : undefined,
-    heartRate: vital.type === 'heart_rate' ? vital.value : undefined,
-    weight: vital.type === 'weight' ? vital.value : undefined,
-    value: vital.value
-  }));
-
-  const bloodPressureData = chartData.filter(item => item.systolic && item.diastolic);
-  const glucoseData = chartData.filter(item => item.glucose);
-  const heartRateData = chartData.filter(item => item.heartRate);
+  if (isLoading) {
+    return (
+      <PatientLayout title="Sinais Vitais">
+        <div className="flex items-center justify-center h-64">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      </PatientLayout>
+    );
+  }
 
   return (
     <PatientLayout title="Sinais Vitais">
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <p className="text-gray-600">
-            Registre e acompanhe seus sinais vitais
-          </p>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Registrar Sinal Vital
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Registrar Sinal Vital</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Tipo de Sinal Vital</Label>
-                  <Select 
-                    value={vitalType} 
-                    onValueChange={(value: any) => setVitalType(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="blood_pressure">Pressão Arterial</SelectItem>
-                      <SelectItem value="glucose">Glicemia</SelectItem>
-                      <SelectItem value="heart_rate">Frequência Cardíaca</SelectItem>
-                      <SelectItem value="weight">Peso</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+      <div className="mb-6 flex items-center justify-between">
+        <p className="text-gray-600">
+          Registre e monitore seus sinais vitais regularmente
+        </p>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); handleDialogClose(open); }}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="mr-1 h-4 w-4" />
+              Registrar Sinal Vital
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Registrar Novo Sinal Vital</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tipo de Sinal Vital</Label>
+                <Select value={formData.type} onValueChange={(value: Vital['type']) => setFormData(prev => ({ ...prev, type: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="blood_pressure">Pressão Arterial</SelectItem>
+                    <SelectItem value="glucose">Glicose</SelectItem>
+                    <SelectItem value="weight">Peso</SelectItem>
+                    <SelectItem value="heart_rate">Frequência Cardíaca</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {vitalType === 'blood_pressure' ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="systolic">Sistólica (mmHg)</Label>
-                      <Input
-                        id="systolic"
-                        type="number"
-                        value={formData.systolic}
-                        onChange={(e) => setFormData(prev => ({...prev, systolic: e.target.value}))}
-                        placeholder="120"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="diastolic">Diastólica (mmHg)</Label>
-                      <Input
-                        id="diastolic"
-                        type="number"
-                        value={formData.diastolic}
-                        onChange={(e) => setFormData(prev => ({...prev, diastolic: e.target.value}))}
-                        placeholder="80"
-                        required
-                      />
-                    </div>
-                  </div>
-                ) : (
+              {formData.type === 'blood_pressure' ? (
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="value">
-                      Valor ({getUnit(vitalType)})
-                    </Label>
+                    <Label>Sistólica</Label>
                     <Input
-                      id="value"
                       type="number"
-                      step={vitalType === 'weight' ? '0.1' : '1'}
-                      value={formData.value}
-                      onChange={(e) => setFormData(prev => ({...prev, value: e.target.value}))}
-                      placeholder={
-                        vitalType === 'glucose' ? '100' :
-                        vitalType === 'heart_rate' ? '70' :
-                        vitalType === 'weight' ? '70.5' : ''
-                      }
-                      required
+                      placeholder="120"
+                      value={formData.systolic}
+                      onChange={(e) => setFormData(prev => ({ ...prev, systolic: e.target.value }))}
                     />
                   </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="recorded_at">Data e Hora</Label>
-                  <Input
-                    id="recorded_at"
-                    type="datetime-local"
-                    value={formData.recorded_at}
-                    onChange={(e) => setFormData(prev => ({...prev, recorded_at: e.target.value}))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Observações (opcional)</Label>
-                  <Input
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData(prev => ({...prev, notes: e.target.value}))}
-                    placeholder="Observações sobre a medição..."
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                    className="flex-1"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isCreating}
-                    className="flex-1"
-                  >
-                    {isCreating ? 'Registrando...' : 'Registrar'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Charts */}
-        {bloodPressureData.length > 0 && (
-          <VitalChart
-            title="Pressão Arterial"
-            type="pressure"
-            data={bloodPressureData}
-          />
-        )}
-
-        {glucoseData.length > 0 && (
-          <VitalChart
-            title="Glicemia"
-            type="glucose"
-            data={glucoseData}
-          />
-        )}
-
-        {heartRateData.length > 0 && (
-          <VitalChart
-            title="Frequência Cardíaca"
-            type="heart-rate"
-            data={heartRateData}
-          />
-        )}
-
-        {/* Recent vitals list */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Registros Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {vitals.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">
-                Nenhum sinal vital registrado ainda.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {vitals.slice(0, 10).map((vital) => (
-                  <div
-                    key={vital.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      {getVitalIcon(vital.type)}
-                      <div>
-                        <p className="font-medium">
-                          {vital.type === 'blood_pressure' ? 'Pressão Arterial' :
-                           vital.type === 'glucose' ? 'Glicemia' :
-                           vital.type === 'heart_rate' ? 'Frequência Cardíaca' :
-                           vital.type === 'weight' ? 'Peso' : vital.type}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {format(parseISO(vital.recorded_at), 'dd/MM/yyyy HH:mm')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
-                        {getVitalValue(vital)}
-                      </p>
-                      {vital.notes && (
-                        <p className="text-sm text-gray-600">{vital.notes}</p>
-                      )}
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Diastólica</Label>
+                    <Input
+                      type="number"
+                      placeholder="80"
+                      value={formData.diastolic}
+                      onChange={(e) => setFormData(prev => ({ ...prev, diastolic: e.target.value }))}
+                    />
                   </div>
-                ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Valor</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={formData.value}
+                      onChange={(e) => setFormData(prev => ({ ...prev, value: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Unidade</Label>
+                    <Input
+                      placeholder="mg/dL, kg, bpm"
+                      value={formData.unit}
+                      onChange={(e) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Data</Label>
+                <Input
+                  type="date"
+                  value={formData.recorded_at}
+                  onChange={(e) => setFormData(prev => ({ ...prev, recorded_at: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observações (opcional)</Label>
+                <Input
+                  placeholder="Ex: Em jejum, após exercício"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSubmit} disabled={!formData.type}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => { setIsEditDialogOpen(open); handleDialogClose(open); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Sinal Vital</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Tipo de Sinal Vital</Label>
+              <Select value={formData.type} onValueChange={(value: Vital['type']) => setFormData(prev => ({ ...prev, type: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="blood_pressure">Pressão Arterial</SelectItem>
+                  <SelectItem value="glucose">Glicose</SelectItem>
+                  <SelectItem value="weight">Peso</SelectItem>
+                  <SelectItem value="heart_rate">Frequência Cardíaca</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.type === 'blood_pressure' ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Sistólica</Label>
+                  <Input
+                    type="number"
+                    placeholder="120"
+                    value={formData.systolic}
+                    onChange={(e) => setFormData(prev => ({ ...prev, systolic: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Diastólica</Label>
+                  <Input
+                    type="number"
+                    placeholder="80"
+                    value={formData.diastolic}
+                    onChange={(e) => setFormData(prev => ({ ...prev, diastolic: e.target.value }))}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Valor</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={formData.value}
+                    onChange={(e) => setFormData(prev => ({ ...prev, value: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Unidade</Label>
+                  <Input
+                    placeholder="mg/dL, kg, bpm"
+                    value={formData.unit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
+                  />
+                </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+
+            <div className="space-y-2">
+              <Label>Data</Label>
+              <Input
+                type="date"
+                value={formData.recorded_at}
+                onChange={(e) => setFormData(prev => ({ ...prev, recorded_at: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Observações (opcional)</Label>
+              <Input
+                placeholder="Ex: Em jejum, após exercício"
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSubmit} disabled={!formData.type}>Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Vitals List */}
+      {vitals.length > 0 ? (
+        <div className="grid gap-4">
+          {vitals.map((vital) => (
+            <Card key={vital.id}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                      {getVitalIcon(vital.type)}
+                    </div>
+                    <div>
+                      <p className="font-medium">{getVitalLabel(vital.type)}</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatVitalValue(vital)}</p>
+                      {vital.notes && (
+                        <p className="text-sm text-gray-500 mt-1">{vital.notes}</p>
+                      )}
+                      <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(vital.recorded_at).toLocaleString('pt-BR')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEdit(vital)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Dialog open={deleteConfirmation === vital.id} onOpenChange={(open) => !open && setDeleteConfirmation(null)}>
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setDeleteConfirmation(vital.id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Confirmar exclusão</DialogTitle>
+                        </DialogHeader>
+                        <p className="py-4">
+                          Tem certeza que deseja excluir este registro de {getVitalLabel(vital.type).toLowerCase()}?
+                          Esta ação não pode ser desfeita.
+                        </p>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setDeleteConfirmation(null)}>Cancelar</Button>
+                          <Button variant="destructive" onClick={() => handleDelete(vital.id)}>Excluir</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-gray-50 border rounded-lg p-8 text-center">
+          <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 mb-4">Você ainda não registrou nenhum sinal vital.</p>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="mr-1 h-4 w-4" />
+                Registrar Primeiro Sinal Vital
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+        </div>
+      )}
     </PatientLayout>
   );
 };

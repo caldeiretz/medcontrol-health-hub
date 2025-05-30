@@ -1,101 +1,41 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Share2, Search, Loader2, UserCheck, X, Check } from "lucide-react";
 import PatientLayout from "@/components/layouts/PatientLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-
-// Mock connected clinics data
-const mockConnectedClinics = [
-  {
-    id: 1,
-    name: "Dra. Ana Silva",
-    clinicName: "Clínica Cardio Saúde",
-    specialty: "Cardiologia",
-    connectedSince: "15/04/2023",
-  },
-  {
-    id: 2,
-    name: "Dr. Carlos Mendes",
-    clinicName: "Hospital São Lucas",
-    specialty: "Endocrinologia",
-    connectedSince: "03/01/2023",
-  },
-];
-
-// Mock search results
-const mockSearchResults = [
-  {
-    id: 3,
-    name: "Dr. Roberto Almeida",
-    clinicName: "Clínica Bem Estar",
-    specialty: "Geriatria",
-  },
-  {
-    id: 4,
-    name: "Dra. Márcia Santos",
-    clinicName: "Centro Médico Vida",
-    specialty: "Cardiologia",
-  },
-];
+import { useProfile } from "@/hooks/useProfile";
+import { useSharing } from "@/hooks/useSharing";
 
 const Sharing = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [connectedClinics, setConnectedClinics] = useState(mockConnectedClinics);
-  const [confirmDisconnect, setConfirmDisconnect] = useState<number | null>(null);
-  const [confirmConnect, setConfirmConnect] = useState<number | null>(null);
-  const navigate = useNavigate();
+  const [confirmDisconnect, setConfirmDisconnect] = useState<string | null>(null);
+  const [confirmConnect, setConfirmConnect] = useState<string | null>(null);
+  
+  const { searchDoctors, searchResults, isSearching } = useProfile();
+  const { relationships, createSharing, revokeSharing, isCreating, isRevoking } = useSharing();
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
-      toast.error("Digite um nome ou código para buscar");
       return;
     }
-
-    setIsSearching(true);
-
-    // Simulate API call with timeout
-    setTimeout(() => {
-      setSearchResults(mockSearchResults);
-      setIsSearching(false);
-    }, 1000);
+    searchDoctors(searchQuery.trim());
   };
 
-  const handleDisconnect = (clinicId: number) => {
-    setConnectedClinics(prev => prev.filter(clinic => clinic.id !== clinicId));
-    setConfirmDisconnect(null);
-    toast.success("Compartilhamento revogado com sucesso");
-  };
-
-  const handleConnect = (clinic: any) => {
-    // First check if already connected
-    const isAlreadyConnected = connectedClinics.some(c => c.id === clinic.id);
-    
-    if (isAlreadyConnected) {
-      toast.error("Você já compartilha dados com esta clínica");
-      setConfirmConnect(null);
-      return;
-    }
-    
-    // Add to connected clinics
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('pt-BR');
-    
-    const newClinic = {
-      ...clinic,
-      connectedSince: formattedDate
-    };
-    
-    setConnectedClinics(prev => [...prev, newClinic]);
+  const handleConnect = (doctorId: string) => {
+    createSharing(doctorId);
     setConfirmConnect(null);
-    toast.success("Compartilhamento concedido com sucesso");
   };
+
+  const handleDisconnect = (sharingId: string) => {
+    revokeSharing(sharingId);
+    setConfirmDisconnect(null);
+  };
+
+  const selectedDoctor = searchResults.find(doctor => doctor.id === confirmConnect);
+  const selectedRelationship = relationships.find(rel => rel.id === confirmDisconnect);
 
   return (
     <PatientLayout title="Compartilhamento">
@@ -122,13 +62,14 @@ const Sharing = () => {
                       placeholder="Nome ou código..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                       className="text-base"
                     />
                   </div>
                   <Button
                     onClick={handleSearch}
                     className="bg-blue-600 hover:bg-blue-700"
-                    disabled={isSearching}
+                    disabled={isSearching || !searchQuery.trim()}
                   >
                     {isSearching ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -146,62 +87,89 @@ const Sharing = () => {
                     <h3 className="text-sm font-medium text-gray-500">Resultados da busca</h3>
                     
                     <div className="space-y-3">
-                      {searchResults.map((result) => (
-                        <div 
-                          key={result.id}
-                          className="border rounded-lg p-4 flex items-center justify-between"
-                        >
-                          <div>
-                            <p className="font-medium">{result.name}</p>
-                            <p className="text-sm text-gray-600">{result.clinicName}</p>
-                            <p className="text-xs text-gray-500">{result.specialty}</p>
-                          </div>
-                          <Dialog open={confirmConnect === result.id} onOpenChange={(open) => !open && setConfirmConnect(null)}>
-                            <DialogTrigger asChild>
-                              <Button 
-                                size="sm"
-                                onClick={() => setConfirmConnect(result.id)}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Share2 className="h-4 w-4 mr-1" />
-                                Conceder Acesso
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Confirmar compartilhamento</DialogTitle>
-                                <DialogDescription>
-                                  Você está concedendo acesso aos seus dados para:
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="py-4">
-                                <p className="font-medium">{result.name}</p>
-                                <p className="text-sm text-gray-600">{result.clinicName}</p>
-                                <p className="text-sm text-gray-600">{result.specialty}</p>
-                                
-                                <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-md text-sm">
-                                  <p>O profissional de saúde poderá visualizar:</p>
-                                  <ul className="list-disc list-inside mt-2 space-y-1">
-                                    <li>Suas medicações e histórico de doses</li>
-                                    <li>Seus sinais vitais registrados</li>
-                                    <li>Suas informações básicas de cadastro</li>
-                                  </ul>
-                                </div>
+                      {searchResults.map((doctor) => {
+                        const isAlreadyConnected = relationships.some(rel => rel.doctor_id === doctor.id);
+                        
+                        return (
+                          <div 
+                            key={doctor.id}
+                            className="border rounded-lg p-4 flex items-center justify-between"
+                          >
+                            <div>
+                              <p className="font-medium">{doctor.name}</p>
+                              <p className="text-sm text-gray-600">{doctor.clinic_name}</p>
+                              <p className="text-xs text-gray-500">{doctor.specialty}</p>
+                              {doctor.doctor_code && (
+                                <p className="text-xs text-blue-600 font-mono bg-blue-50 px-2 py-1 rounded mt-1 inline-block">
+                                  Código: {doctor.doctor_code}
+                                </p>
+                              )}
+                            </div>
+                            
+                            {isAlreadyConnected ? (
+                              <div className="text-green-600 text-sm font-medium">
+                                ✓ Já conectado
                               </div>
-                              <DialogFooter>
-                                <Button variant="outline" onClick={() => setConfirmConnect(null)}>Cancelar</Button>
-                                <Button 
-                                  onClick={() => handleConnect(result)}
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Confirmar Acesso
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      ))}
+                            ) : (
+                              <Dialog open={confirmConnect === doctor.id} onOpenChange={(open) => !open && setConfirmConnect(null)}>
+                                <DialogTrigger asChild>
+                                  <Button 
+                                    size="sm"
+                                    onClick={() => setConfirmConnect(doctor.id)}
+                                    className="bg-green-600 hover:bg-green-700"
+                                    disabled={isCreating}
+                                  >
+                                    <Share2 className="h-4 w-4 mr-1" />
+                                    Conceder Acesso
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Confirmar compartilhamento</DialogTitle>
+                                    <DialogDescription>
+                                      Você está concedendo acesso aos seus dados para:
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  {selectedDoctor && (
+                                    <div className="py-4">
+                                      <p className="font-medium">{selectedDoctor.name}</p>
+                                      <p className="text-sm text-gray-600">{selectedDoctor.clinic_name}</p>
+                                      <p className="text-sm text-gray-600">{selectedDoctor.specialty}</p>
+                                      {selectedDoctor.doctor_code && (
+                                        <p className="text-sm text-blue-600 font-mono">Código: {selectedDoctor.doctor_code}</p>
+                                      )}
+                                      
+                                      <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-md text-sm">
+                                        <p>O profissional de saúde poderá visualizar:</p>
+                                        <ul className="list-disc list-inside mt-2 space-y-1">
+                                          <li>Suas medicações e histórico de doses</li>
+                                          <li>Seus sinais vitais registrados</li>
+                                          <li>Suas informações básicas de cadastro</li>
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <DialogFooter>
+                                    <Button variant="outline" onClick={() => setConfirmConnect(null)}>Cancelar</Button>
+                                    <Button 
+                                      onClick={() => handleConnect(doctor.id)}
+                                      className="bg-green-600 hover:bg-green-700"
+                                      disabled={isCreating}
+                                    >
+                                      {isCreating ? (
+                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                      ) : (
+                                        <Check className="h-4 w-4 mr-1" />
+                                      )}
+                                      Confirmar Acesso
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -212,10 +180,10 @@ const Sharing = () => {
           <div>
             <h2 className="text-xl font-semibold mb-4">Médicos e Clínicas Conectadas</h2>
             
-            {connectedClinics.length > 0 ? (
+            {relationships.length > 0 ? (
               <div className="space-y-4">
-                {connectedClinics.map((clinic) => (
-                  <Card key={clinic.id}>
+                {relationships.map((relationship) => (
+                  <Card key={relationship.id}>
                     <CardContent className="p-5">
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div className="flex items-center gap-3">
@@ -223,27 +191,36 @@ const Sharing = () => {
                             <UserCheck className="h-5 w-5 text-green-600" />
                           </div>
                           <div>
-                            <p className="font-medium">{clinic.name}</p>
-                            <p className="text-sm text-gray-600">{clinic.clinicName}</p>
+                            <p className="font-medium">{relationship.doctor?.name}</p>
+                            <p className="text-sm text-gray-600">{relationship.doctor?.clinic_name}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-xs text-gray-500">
-                                {clinic.specialty}
+                                {relationship.doctor?.specialty}
                               </span>
+                              {relationship.doctor?.doctor_code && (
+                                <>
+                                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-gray-300"></span>
+                                  <span className="text-xs text-blue-600 font-mono">
+                                    {relationship.doctor.doctor_code}
+                                  </span>
+                                </>
+                              )}
                               <span className="inline-flex h-1.5 w-1.5 rounded-full bg-gray-300"></span>
                               <span className="text-xs text-gray-500">
-                                Conectado desde {clinic.connectedSince}
+                                Conectado em {new Date(relationship.shared_at).toLocaleDateString('pt-BR')}
                               </span>
                             </div>
                           </div>
                         </div>
                         
-                        <Dialog open={confirmDisconnect === clinic.id} onOpenChange={(open) => !open && setConfirmDisconnect(null)}>
+                        <Dialog open={confirmDisconnect === relationship.id} onOpenChange={(open) => !open && setConfirmDisconnect(null)}>
                           <DialogTrigger asChild>
                             <Button 
                               variant="outline" 
                               size="sm"
                               className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full lg:w-auto"
-                              onClick={() => setConfirmDisconnect(clinic.id)}
+                              onClick={() => setConfirmDisconnect(relationship.id)}
+                              disabled={isRevoking}
                             >
                               <X className="h-4 w-4 mr-1" />
                               Revogar Acesso
@@ -256,25 +233,32 @@ const Sharing = () => {
                                 Tem certeza que deseja revogar o acesso aos seus dados para:
                               </DialogDescription>
                             </DialogHeader>
-                            <div className="py-4">
-                              <p className="font-medium">{clinic.name}</p>
-                              <p className="text-sm text-gray-600">{clinic.clinicName}</p>
-                              <p className="text-sm text-gray-600">{clinic.specialty}</p>
-                              
-                              <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 rounded-md text-sm">
-                                <p>
-                                  Ao revogar o acesso, o profissional não poderá mais visualizar suas 
-                                  medicações, sinais vitais e outras informações de saúde.
-                                </p>
+                            {selectedRelationship && (
+                              <div className="py-4">
+                                <p className="font-medium">{selectedRelationship.doctor?.name}</p>
+                                <p className="text-sm text-gray-600">{selectedRelationship.doctor?.clinic_name}</p>
+                                <p className="text-sm text-gray-600">{selectedRelationship.doctor?.specialty}</p>
+                                
+                                <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 rounded-md text-sm">
+                                  <p>
+                                    Ao revogar o acesso, o profissional não poderá mais visualizar suas 
+                                    medicações, sinais vitais e outras informações de saúde.
+                                  </p>
+                                </div>
                               </div>
-                            </div>
+                            )}
                             <DialogFooter>
                               <Button variant="outline" onClick={() => setConfirmDisconnect(null)}>Cancelar</Button>
                               <Button 
                                 variant="destructive" 
-                                onClick={() => handleDisconnect(clinic.id)}
+                                onClick={() => handleDisconnect(relationship.id)}
+                                disabled={isRevoking}
                               >
-                                Revogar Acesso
+                                {isRevoking ? (
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                ) : (
+                                  'Revogar Acesso'
+                                )}
                               </Button>
                             </DialogFooter>
                           </DialogContent>

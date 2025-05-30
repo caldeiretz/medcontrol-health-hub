@@ -1,9 +1,10 @@
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import PatientLayout from "@/components/layouts/PatientLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useMedications } from "@/hooks/useMedications";
+import MedicationTimesPicker from "@/components/MedicationTimesPicker";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome do medicamento é obrigatório"),
@@ -38,6 +40,7 @@ type FormValues = z.infer<typeof formSchema>;
 const AddMedication = () => {
   const navigate = useNavigate();
   const { createMedication, isCreating } = useMedications();
+  const [customTimes, setCustomTimes] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -63,7 +66,10 @@ const AddMedication = () => {
         is_active: true,
       };
 
-      createMedication(medicationData);
+      createMedication({ 
+        medication: medicationData, 
+        customTimes: customTimes.length > 0 ? customTimes : undefined 
+      });
       navigate("/patient/medications");
     } catch (error) {
       console.error("Error creating medication:", error);
@@ -72,7 +78,7 @@ const AddMedication = () => {
 
   return (
     <PatientLayout title="Adicionar Nova Medicação">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -139,6 +145,14 @@ const AddMedication = () => {
                 </FormItem>
               )}
             />
+
+            {form.watch("frequency") && form.watch("frequency") !== "S.O.S." && (
+              <MedicationTimesPicker
+                frequency={form.watch("frequency")}
+                customTimes={customTimes}
+                onCustomTimesChange={setCustomTimes}
+              />
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Medication {
@@ -44,8 +43,8 @@ export const medicationService = {
     return data || [];
   },
 
-  // Create a new medication
-  async createMedication(medication: Omit<Medication, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Medication> {
+  // Create a new medication with custom times
+  async createMedication(medication: Omit<Medication, 'id' | 'user_id' | 'created_at' | 'updated_at'>, customTimes?: string[]): Promise<Medication> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
@@ -63,12 +62,13 @@ export const medicationService = {
       throw error;
     }
 
-    // Create medication schedule
+    // Create medication schedule with custom times
     try {
-      await supabase.rpc('create_medication_schedule', {
+      await supabase.rpc('create_medication_schedule_with_times', {
         med_id: data.id,
         user_id: user.id,
         frequency_text: medication.frequency,
+        custom_times: customTimes || null,
         start_date: medication.start_date
       });
     } catch (scheduleError) {
@@ -79,7 +79,7 @@ export const medicationService = {
   },
 
   // Update a medication
-  async updateMedication(id: string, updates: Partial<Medication>): Promise<Medication> {
+  async updateMedication(id: string, updates: Partial<Medication>, customTimes?: string[]): Promise<Medication> {
     const { data, error } = await supabase
       .from('medications')
       .update({
@@ -93,6 +93,24 @@ export const medicationService = {
     if (error) {
       console.error('Error updating medication:', error);
       throw error;
+    }
+
+    // Update schedule if custom times provided
+    if (customTimes !== undefined) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.rpc('create_medication_schedule_with_times', {
+            med_id: id,
+            user_id: user.id,
+            frequency_text: updates.frequency || data.frequency,
+            custom_times: customTimes.length > 0 ? customTimes : null,
+            start_date: updates.start_date || data.start_date
+          });
+        }
+      } catch (scheduleError) {
+        console.error('Error updating medication schedule:', scheduleError);
+      }
     }
 
     return data;
@@ -168,5 +186,21 @@ export const medicationService = {
       console.error('Error marking medication as skipped:', error);
       throw error;
     }
+  },
+
+  // Get custom times for a medication
+  async getMedicationTimes(medicationId: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('medication_times')
+      .select('time_of_day')
+      .eq('medication_id', medicationId)
+      .order('time_of_day');
+
+    if (error) {
+      console.error('Error fetching medication times:', error);
+      return [];
+    }
+
+    return (data || []).map(item => item.time_of_day);
   }
 };
