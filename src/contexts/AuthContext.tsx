@@ -161,29 +161,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, error: 'Todos os campos obrigatórios devem ser preenchidos' };
       }
 
-      // Preparar metadados
-      const userMetadata = {
-        name: userData.name.trim(),
+      // Limpar e preparar os dados
+      const cleanName = userData.name.trim();
+      const cleanEmail = userData.email.trim().toLowerCase();
+      
+      // Preparar metadados com nomes de campos consistentes
+      const userMetadata: any = {
+        name: cleanName,
         role: userData.role,
-        ...(userData.role === 'patient' && userData.age && { age: userData.age.toString() }),
-        ...(userData.role === 'patient' && userData.condition && { condition: userData.condition.trim() }),
-        ...(userData.role === 'clinic' && userData.clinicName && { clinicName: userData.clinicName.trim() }),
-        ...(userData.role === 'clinic' && userData.crm && { crm: userData.crm.trim() }),
-        ...(userData.role === 'clinic' && userData.specialty && { specialty: userData.specialty.trim() })
       };
+
+      // Adicionar campos específicos por tipo de usuário
+      if (userData.role === 'patient') {
+        if (userData.age) userMetadata.age = userData.age.toString();
+        if (userData.condition) userMetadata.condition = userData.condition.trim();
+      } else if (userData.role === 'clinic') {
+        if (userData.clinicName) userMetadata.clinicName = userData.clinicName.trim();
+        if (userData.crm) userMetadata.crm = userData.crm.trim();
+        if (userData.specialty) userMetadata.specialty = userData.specialty.trim();
+      }
 
       console.log('Registration metadata:', userMetadata);
       
       console.log('Calling supabase.auth.signUp...');
       const { data, error } = await supabase.auth.signUp({
-        email: userData.email.trim(),
+        email: cleanEmail,
         password: userData.password,
         options: {
           data: userMetadata
         }
       });
 
-      console.log('Supabase signup response:', { data, error });
+      console.log('Supabase signup response:', { 
+        user: data.user ? 'User created' : 'No user', 
+        session: data.session ? 'Session created' : 'No session',
+        error: error ? error.message : 'No error'
+      });
       
       if (error) {
         console.error('Supabase signup error:', error);
@@ -195,6 +208,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return { success: false, error: 'E-mail inválido' };
         } else if (error.message.includes('Password')) {
           return { success: false, error: 'Senha deve ter pelo menos 6 caracteres' };
+        } else if (error.message.includes('Database error')) {
+          return { success: false, error: 'Erro no banco de dados. Verifique se todos os campos estão preenchidos corretamente.' };
         }
         
         return { success: false, error: `Erro no cadastro: ${error.message}` };
@@ -202,6 +217,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (data.user) {
         console.log('User registered successfully:', data.user.id);
+        
+        // Se o usuário foi criado mas não há sessão (confirmação de email necessária)
+        if (!data.session) {
+          return { success: true };
+        }
+        
         return { success: true };
       }
 
