@@ -132,7 +132,11 @@ export const medicationService = {
       throw error;
     }
 
-    return data || [];
+    // Type assertion to ensure proper typing
+    return (data || []).map(log => ({
+      ...log,
+      status: log.status as MedicationLog['status']
+    })) as MedicationLog[];
   },
 
   // Mark medication as taken

@@ -33,7 +33,11 @@ export const vitalsService = {
       throw error;
     }
 
-    return data || [];
+    // Type assertion to ensure proper typing
+    return (data || []).map(vital => ({
+      ...vital,
+      type: vital.type as Vital['type']
+    })) as Vital[];
   },
 
   // Create a new vital
@@ -55,7 +59,11 @@ export const vitalsService = {
       throw error;
     }
 
-    return data;
+    // Type assertion to ensure proper typing
+    return {
+      ...data,
+      type: data.type as Vital['type']
+    } as Vital;
   },
 
   // Update a vital
@@ -72,7 +80,11 @@ export const vitalsService = {
       throw error;
     }
 
-    return data;
+    // Type assertion to ensure proper typing
+    return {
+      ...data,
+      type: data.type as Vital['type']
+    } as Vital;
   },
 
   // Delete a vital
