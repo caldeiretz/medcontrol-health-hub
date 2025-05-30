@@ -153,8 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }): Promise<{ success: boolean; error?: string }> => {
     try {
       setIsLoading(true);
-      console.log('=== STARTING REGISTRATION PROCESS ===');
-      console.log('Registration attempt for:', userData.email, 'as role:', userData.role);
+      console.log('Starting registration for:', userData.email, 'as role:', userData.role);
       
       // Validar dados obrigatórios
       if (!userData.name || !userData.email || !userData.password || !userData.role) {
@@ -162,33 +161,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, error: 'Todos os campos obrigatórios devem ser preenchidos' };
       }
 
-      // Preparar metadados de forma mais simples
-      const userMetadata: any = {
+      // Preparar metadados simplificados
+      const userMetadata = {
         name: userData.name.trim(),
         role: userData.role,
+        ...(userData.role === 'patient' && userData.age && { age: userData.age.toString() }),
+        ...(userData.role === 'patient' && userData.condition && { condition: userData.condition.trim() }),
+        ...(userData.role === 'clinic' && userData.clinicName && { clinicName: userData.clinicName.trim() }),
+        ...(userData.role === 'clinic' && userData.crm && { crm: userData.crm.trim() }),
+        ...(userData.role === 'clinic' && userData.specialty && { specialty: userData.specialty.trim() })
       };
 
-      // Adicionar campos específicos apenas se existirem
-      if (userData.role === 'patient') {
-        if (userData.age) {
-          userMetadata.age = userData.age.toString();
-        }
-        if (userData.condition) {
-          userMetadata.condition = userData.condition.trim();
-        }
-      } else if (userData.role === 'clinic') {
-        if (userData.clinicName) {
-          userMetadata.clinicName = userData.clinicName.trim();
-        }
-        if (userData.crm) {
-          userMetadata.crm = userData.crm.trim();
-        }
-        if (userData.specialty) {
-          userMetadata.specialty = userData.specialty.trim();
-        }
-      }
-
-      console.log('Final metadata:', userMetadata);
+      console.log('Registration metadata:', userMetadata);
       
       const { data, error } = await supabase.auth.signUp({
         email: userData.email.trim(),
@@ -198,18 +182,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      console.log('Supabase response:', { data, error });
+      console.log('Supabase signup response:', { data, error });
       
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase signup error:', error);
         
-        // Tratar erros específicos
+        // Tratamento específico de erros
         if (error.message.includes('User already registered')) {
           return { success: false, error: 'Este e-mail já está cadastrado' };
         } else if (error.message.includes('Invalid email')) {
           return { success: false, error: 'E-mail inválido' };
         } else if (error.message.includes('Password')) {
           return { success: false, error: 'Senha deve ter pelo menos 6 caracteres' };
+        } else if (error.message.includes('Database error')) {
+          return { success: false, error: 'Erro no servidor. Tente novamente em alguns minutos.' };
         }
         
         return { success: false, error: `Erro no cadastro: ${error.message}` };
@@ -217,10 +203,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (data.user) {
         console.log('User registered successfully:', data.user.id);
-        
-        // Aguardar um pouco para o trigger processar
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
         return { success: true };
       }
 
