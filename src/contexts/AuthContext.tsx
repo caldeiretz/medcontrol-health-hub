@@ -157,47 +157,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       
-      // Preparar metadados baseados no role
-      const userMetadata: any = {
-        name: userData.name,
-        role: userData.role,
-      };
-
-      // Adicionar dados específicos do role
-      if (userData.role === 'patient') {
-        if (userData.age) userMetadata.age = userData.age.toString();
-        if (userData.condition) userMetadata.condition = userData.condition;
-      } else if (userData.role === 'clinic') {
-        if (userData.clinicName) userMetadata.clinicName = userData.clinicName;
-        if (userData.crm) userMetadata.crm = userData.crm;
-        if (userData.specialty) userMetadata.specialty = userData.specialty;
-      }
-
+      // Simplificar o processo de registro
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
         options: {
-          data: userMetadata
+          data: {
+            name: userData.name,
+            role: userData.role,
+            // Adicionar dados específicos do role
+            ...(userData.role === 'patient' ? {
+              age: userData.age?.toString(),
+              condition: userData.condition
+            } : {}),
+            ...(userData.role === 'clinic' ? {
+              clinicName: userData.clinicName,
+              crm: userData.crm,
+              specialty: userData.specialty
+            } : {})
+          }
         }
       });
 
       if (error) {
         console.error('Registration error:', error);
+        
+        // Fornecer mensagens de erro mais específicas
+        if (error.message.includes('User already registered')) {
+          return { success: false, error: 'Este e-mail já está cadastrado' };
+        } else if (error.message.includes('Database error')) {
+          return { success: false, error: 'Erro no banco de dados. Verifique se todas as tabelas foram criadas corretamente.' };
+        } else if (error.message.includes('Invalid input')) {
+          return { success: false, error: 'Dados inválidos. Verifique os campos obrigatórios.' };
+        }
+        
         return { success: false, error: error.message };
       }
 
       if (data.user) {
-        // O perfil será criado automaticamente pelo trigger
         console.log('User registered successfully:', data.user.id);
         
         // Se a confirmação de email estiver desabilitada, o usuário já estará logado
         if (data.session) {
-          const profile = await fetchUserProfile(data.user.id);
-          if (profile) {
-            setUser(profile);
-            setSession(data.session);
-            setIsAuthenticated(true);
-          }
+          // Aguardar um pouco para o trigger criar o perfil
+          setTimeout(async () => {
+            const profile = await fetchUserProfile(data.user.id);
+            if (profile) {
+              setUser(profile);
+              setSession(data.session);
+              setIsAuthenticated(true);
+            }
+          }, 1000);
         }
         
         return { success: true };
