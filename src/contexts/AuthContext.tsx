@@ -47,6 +47,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Função para buscar perfil do usuário
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
+      console.log('Fetching user profile for:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -58,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return null;
       }
 
+      console.log('User profile fetched:', data);
       return data;
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -67,6 +70,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Configurar listener de mudanças de autenticação
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -75,26 +80,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         
         if (session?.user) {
-          // Buscar perfil do usuário
-          const profile = await fetchUserProfile(session.user.id);
-          if (profile) {
-            setUser(profile);
-            setIsAuthenticated(true);
-          } else {
-            setUser(null);
-            setIsAuthenticated(false);
-          }
+          // Aguardar um pouco para garantir que o trigger foi executado
+          setTimeout(async () => {
+            const profile = await fetchUserProfile(session.user.id);
+            if (profile) {
+              setUser(profile);
+              setIsAuthenticated(true);
+            } else {
+              console.warn('Profile not found for user:', session.user.id);
+              setUser(null);
+              setIsAuthenticated(false);
+            }
+            setIsLoading(false);
+          }, 1500);
         } else {
           setUser(null);
           setIsAuthenticated(false);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
     // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
+      
       if (session?.user) {
         fetchUserProfile(session.user.id).then((profile) => {
           if (profile) {
@@ -115,6 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setIsLoading(true);
+      console.log('Attempting login for:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -127,15 +138,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user) {
-        const profile = await fetchUserProfile(data.user.id);
-        if (profile) {
-          setUser(profile);
-          setSession(data.session);
-          setIsAuthenticated(true);
-          return { success: true };
-        } else {
-          return { success: false, error: 'Perfil de usuário não encontrado' };
-        }
+        // Aguardar um pouco para garantir que tudo está sincronizado
+        setTimeout(async () => {
+          const profile = await fetchUserProfile(data.user.id);
+          if (profile) {
+            setUser(profile);
+            setSession(data.session);
+            setIsAuthenticated(true);
+          }
+        }, 500);
+        
+        return { success: true };
       }
 
       return { success: false, error: 'Falha no login' };
@@ -156,37 +169,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }): Promise<{ success: boolean; error?: string }> => {
     try {
       setIsLoading(true);
+      console.log('Attempting registration for:', userData.email, 'as', userData.role);
       
-      // Simplificar o processo de registro
+      // Preparar os dados do usuário
+      const userMetadata: any = {
+        name: userData.name,
+        role: userData.role,
+      };
+
+      // Adicionar dados específicos baseados no role
+      if (userData.role === 'patient') {
+        if (userData.age) userMetadata.age = userData.age.toString();
+        if (userData.condition) userMetadata.condition = userData.condition;
+      } else if (userData.role === 'clinic') {
+        if (userData.clinicName) userMetadata.clinicName = userData.clinicName;
+        if (userData.crm) userMetadata.crm = userData.crm;
+        if (userData.specialty) userMetadata.specialty = userData.specialty;
+      }
+
+      console.log('User metadata for registration:', userMetadata);
+      
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
         options: {
-          data: {
-            name: userData.name,
-            role: userData.role,
-            // Adicionar dados específicos do role
-            ...(userData.role === 'patient' ? {
-              age: userData.age?.toString(),
-              condition: userData.condition
-            } : {}),
-            ...(userData.role === 'clinic' ? {
-              clinicName: userData.clinicName,
-              crm: userData.crm,
-              specialty: userData.specialty
-            } : {})
-          }
+          data: userMetadata
         }
       });
 
       if (error) {
         console.error('Registration error:', error);
         
-        // Fornecer mensagens de erro mais específicas
+        // Mensagens de erro mais específicas
         if (error.message.includes('User already registered')) {
           return { success: false, error: 'Este e-mail já está cadastrado' };
         } else if (error.message.includes('Database error')) {
-          return { success: false, error: 'Erro no banco de dados. Verifique se todas as tabelas foram criadas corretamente.' };
+          return { success: false, error: 'Erro no banco de dados. Aguarde alguns segundos e tente novamente.' };
         } else if (error.message.includes('Invalid input')) {
           return { success: false, error: 'Dados inválidos. Verifique os campos obrigatórios.' };
         }
@@ -199,15 +217,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Se a confirmação de email estiver desabilitada, o usuário já estará logado
         if (data.session) {
-          // Aguardar um pouco para o trigger criar o perfil
-          setTimeout(async () => {
-            const profile = await fetchUserProfile(data.user.id);
-            if (profile) {
-              setUser(profile);
-              setSession(data.session);
-              setIsAuthenticated(true);
-            }
-          }, 1000);
+          console.log('User session created, waiting for profile creation...');
+          // O AuthStateChange listener irá cuidar do resto
         }
         
         return { success: true };
