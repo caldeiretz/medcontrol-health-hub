@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -17,6 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import SupabaseHealthCheck from '@/components/SupabaseHealthCheck';
 
 const formSchema = z.object({
   doctorName: z.string().min(1, 'Nome do médico é obrigatório'),
@@ -58,6 +58,8 @@ const ClinicRegister = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
+      console.log('Form submitted with values:', { ...values, password: '[HIDDEN]', confirmPassword: '[HIDDEN]' });
+      
       const userData = {
         name: values.doctorName,
         clinicName: values.clinicName,
@@ -68,17 +70,21 @@ const ClinicRegister = () => {
         role: 'clinic' as const,
       };
       
+      console.log('Calling register function...');
       const result = await register(userData);
+      
+      console.log('Register result:', result);
       
       if (result.success) {
         toast.success('Cadastro realizado com sucesso');
         navigate('/clinic/dashboard');
       } else {
+        console.error('Registration failed:', result.error);
         toast.error(result.error || 'Falha no cadastro. Tente novamente.');
       }
     } catch (error) {
+      console.error('Form submission error:', error);
       toast.error('Ocorreu um erro ao fazer o cadastro.');
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +99,11 @@ const ClinicRegister = () => {
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Cadastro de Médico/Clínica</h1>
           <p className="mt-2 text-gray-600">Crie sua conta para monitorar seus pacientes</p>
+          
+          {/* Componente de diagnóstico */}
+          <div className="mt-4 flex justify-center">
+            <SupabaseHealthCheck />
+          </div>
         </div>
 
         <div className="rounded-xl border bg-white p-6 shadow-sm">
