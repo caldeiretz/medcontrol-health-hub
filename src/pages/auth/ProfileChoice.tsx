@@ -36,14 +36,14 @@ const ProfileChoice = () => {
               </p>
               <div className="flex flex-col space-y-3">
                 <Button 
-                  onClick={() => navigate('/auth/patient/login')}
+                  onClick={() => navigate('/auth/patient-login')}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Entrar como Paciente
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate('/auth/patient/register')}
+                  onClick={() => navigate('/auth/patient-register')}
                 >
                   Cadastrar como Paciente
                 </Button>
@@ -68,14 +68,14 @@ const ProfileChoice = () => {
               </p>
               <div className="flex flex-col space-y-3">
                 <Button 
-                  onClick={() => navigate('/auth/clinic/login')}
+                  onClick={() => navigate('/auth/clinic-login')}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   Entrar como Médico/Clínica
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate('/auth/clinic/register')}
+                  onClick={() => navigate('/auth/clinic-register')}
                 >
                   Cadastrar como Médico/Clínica
                 </Button>
